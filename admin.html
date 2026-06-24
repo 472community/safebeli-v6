@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeBeli Admin</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: -apple-system, sans-serif; min-height: 100vh; }
+  .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-box { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 40px; width: 360px; }
+  .login-box h1 { font-size: 24px; margin-bottom: 8px; }
+  .login-box p { color: #888; margin-bottom: 24px; font-size: 14px; }
+  .dashboard { max-width: 900px; margin: 0 auto; padding: 32px 16px; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .header h1 { font-size: 24px; }
+  .header span { color: #888; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; }
+  .stat-card .num { font-size: 32px; font-weight: 700; color: #4ade80; }
+  .stat-card .label { color: #888; font-size: 13px; margin-top: 4px; }
+  .section { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .section h2 { font-size: 16px; margin-bottom: 20px; color: #ccc; }
+  .form-row { display: flex; gap: 12px; }
+  input, select { background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
+  input:focus, select:focus { border-color: #4ade80; }
+  input[type="text"], input[type="email"], input[type="password"] { flex: 1; }
+  select { width: 120px; }
+  .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-green { background: #4ade80; color: #000; }
+  .btn-red { background: #ef4444; color: #fff; }
+  .btn-gray { background: #333; color: #fff; }
+  .btn-full { width: 100%; padding: 12px; font-size: 15px; }
+  .msg { padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 14px; display: none; }
+  .msg.success { background: #052e16; border: 1px solid #4ade80; color: #4ade80; }
+  .msg.error { background: #2d0a0a; border: 1px solid #ef4444; color: #ef4444; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 12px; color: #888; font-size: 12px; font-weight: 600; border-bottom: 1px solid #333; }
+  td { padding: 12px; font-size: 13px; border-bottom: 1px solid #1f1f1f; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #052e16; color: #4ade80; }
+  .badge-gray { background: #1f1f1f; color: #888; }
+  .logout { background: none; border: 1px solid #333; color: #888; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .logout:hover { border-color: #ef4444; color: #ef4444; }
+  .loading { color: #888; font-size: 14px; padding: 20px 0; text-align: center; }
+  .action-btn { background: none; border: 1px solid #333; color: #ccc; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .action-btn:hover { border-color: #4ade80; color: #4ade80; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>🛡️ SafeBeli Admin</h1>
+    <p>Masukkan admin key untuk akses</p>
+    <input type="password" id="adminKeyInput" placeholder="Admin Key" style="width:100%;margin-bottom:12px;" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-green btn-full" onclick="doLogin()">Masuk</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard" style="display:none">
+  <div class="header">
+    <h1>🛡️ SafeBeli Admin</h1>
+    <button class="logout" onclick="doLogout()">Logout</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="num" id="statTotal">-</div>
+      <div class="label">Total User</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statPremium" style="color:#fbbf24">-</div>
+      <div class="label">Premium Aktif</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statFree" style="color:#60a5fa">-</div>
+      <div class="label">User Gratis</div>
+    </div>
+  </div>
+
+  <!-- Aktivasi Premium -->
+  <div class="section">
+    <h2>⭐ Aktivasi Premium</h2>
+    <div class="form-row">
+      <input type="email" id="activateEmail" placeholder="Email user yang sudah bayar...">
+      <select id="activateMonths">
+        <option value="1">1 Bulan</option>
+        <option value="3">3 Bulan</option>
+        <option value="6">6 Bulan</option>
+        <option value="12">12 Bulan</option>
+      </select>
+      <button class="btn btn-green" onclick="activatePremium()">Aktifkan</button>
+    </div>
+    <div class="msg" id="activateMsg"></div>
+  </div>
+
+  <!-- User List -->
+  <div class="section">
+    <h2>👥 Daftar User <button class="btn btn-gray" style="font-size:12px;padding:4px 12px;margin-left:8px;" onclick="loadUsers()">Refresh</button></h2>
+    <div id="userTable"><div class="loading">Memuat data...</div></div>
+  </div>
+</div>
+
+<script>
+let ADMIN_KEY = '';
+
+function doLogin() {
+  const key = document.getElementById('adminKeyInput').value.trim();
+  if (!key) return;
+  ADMIN_KEY = key;
+  // Test key
+  fetch('/api/admin', { headers: { 'x-admin-key': key } })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadUsers();
+      } else {
+        showMsg('loginMsg', 'Admin key salah!', false);
+      }
+    })
+    .catch(() => showMsg('loginMsg', 'Koneksi gagal', false));
+}
+
+function doLogout() {
+  ADMIN_KEY = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('adminKeyInput').value = '';
+}
+
+function activatePremium() {
+  const email = document.getElementById('activateEmail').value.trim();
+  const months = parseInt(document.getElementById('activateMonths').value);
+  if (!email) return showMsg('activateMsg', 'Masukkan email user', false);
+
+  fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
+    body: JSON.stringify({ email, months })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showMsg('activateMsg', '✅ ' + data.message, true);
+      document.getElementById('activateEmail').value = '';
+      loadUsers();
+    } else {
+      showMsg('activateMsg', '❌ ' + data.error, false);
+    }
+  });
+}
+
+function loadUsers() {
+  fetch('/api/admin', { headers: { 'x-admin-key': ADMIN_KEY } })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      const users = data.users;
+      const premium = users.filter(u => u.is_premium && new Date(u.premium_expires_at) > new Date());
+      document.getElementById('statTotal').textContent = users.length;
+      document.getElementById('statPremium').textContent = premium.length;
+      document.getElementById('statFree').textContent = users.length - premium.length;
+
+      const rows = users.map(u => {
+        const isPremium = u.is_premium && u.premium_expires_at && new Date(u.premium_expires_at) > new Date();
+        const expires = u.premium_expires_at ? new Date(u.premium_expires_at).toLocaleDateString('id-ID') : '-';
+        const joined = new Date(u.created_at).toLocaleDateString('id-ID');
+        return `<tr>
+          <td>${u.email}</td>
+          <td><span class="badge ${isPremium ? 'badge-green' : 'badge-gray'}">${isPremium ? '⭐ Premium' : 'Gratis'}</span></td>
+          <td>${isPremium ? expires : '-'}</td>
+          <td>${joined}</td>
+          <td><button class="action-btn" onclick="quickActivate('${u.email}')">Aktifkan</button></td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('userTable').innerHTML = `
+        <table>
+          <thead><tr><th>Email</th><th>Status</th><th>Expires</th><th>Bergabung</th><th>Aksi</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="5" style="color:#888;text-align:center;padding:20px">Belum ada user</td></tr>'}</tbody>
+        </table>`;
+    });
+}
+
+function quickActivate(email) {
+  document.getElementById('activateEmail').value = email;
+  document.getElementById('activateEmail').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showMsg(id, text, success) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + (success ? 'success' : 'error');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+</script>
+</body>
+</html>

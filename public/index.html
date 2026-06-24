@@ -480,7 +480,7 @@
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ link, token: getToken() })
+        body: JSON.stringify({ link })
       });
 
       const data = await res.json();
@@ -489,8 +489,8 @@
       incUsage();
       updateUI();
 
-      currentResult = data.analysis ? JSON.stringify(data.analysis) : data.result;
-      showResult(data.analysis, link);
+      currentResult = data.result;
+      showResult(data.result, link);
 
       if (!isPremium() && getRemaining() === 0) {
         setTimeout(() => showPaywall(), 3000);
@@ -502,7 +502,6 @@
   }
 
   function parseResult(text) {
-    if (typeof text === "object" && text !== null) return { score: text.score || 50, status: text.status || "HATI-HATI" };
     return {
       score: parseInt((text.match(/SKOR:\s*(\d+)/) || [])[1] || 50),
       status: ((text.match(/STATUS:\s*(AMAN|HATI-HATI|BAHAYA)/) || [])[1] || 'HATI-HATI')
@@ -521,11 +520,7 @@
     else { circle.classList.add('bahaya'); badge.classList.add('bahaya'); badge.textContent = '🚨 BAHAYA'; }
     document.getElementById('scoreNumber').textContent = score;
     document.getElementById('linkPreview').textContent = link.length > 50 ? link.substring(0, 50) + '...' : link;
-    const displayText = typeof text === 'object' ? (text.summary + '
-
-' + (text.details || []).join('
-')) : text;
-    document.getElementById('analysisText').textContent = displayText;
+    document.getElementById('analysisText').textContent = text;
     document.getElementById('inputSection').style.display = 'none';
     document.getElementById('tipsSection').style.display = 'none';
     document.getElementById('resultSection').classList.add('active');

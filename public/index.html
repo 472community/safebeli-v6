@@ -480,7 +480,7 @@
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ link })
+        body: JSON.stringify({ link, token: getToken() })
       });
 
       const data = await res.json();
@@ -489,8 +489,8 @@
       incUsage();
       updateUI();
 
-      currentResult = data.result;
-      showResult(data.result, link);
+      currentResult = data.analysis || data.result;
+      showResult(data.analysis || data.result, link);
 
       if (!isPremium() && getRemaining() === 0) {
         setTimeout(() => showPaywall(), 3000);
@@ -502,6 +502,10 @@
   }
 
   function parseResult(text) {
+    if (typeof text === 'object' && text !== null) {
+      return { score: text.score || 50, status: text.status || 'HATI-HATI' };
+    }
+    if (!text || typeof text !== 'string') return { score: 50, status: 'HATI-HATI' };
     return {
       score: parseInt((text.match(/SKOR:\s*(\d+)/) || [])[1] || 50),
       status: ((text.match(/STATUS:\s*(AMAN|HATI-HATI|BAHAYA)/) || [])[1] || 'HATI-HATI')
@@ -520,7 +524,10 @@
     else { circle.classList.add('bahaya'); badge.classList.add('bahaya'); badge.textContent = '🚨 BAHAYA'; }
     document.getElementById('scoreNumber').textContent = score;
     document.getElementById('linkPreview').textContent = link.length > 50 ? link.substring(0, 50) + '...' : link;
-    document.getElementById('analysisText').textContent = text;
+    const displayText = typeof text === 'object' && text !== null
+      ? (text.summary || '') + '\n\n' + (text.details || []).join('\n')
+      : (text || '');
+    document.getElementById('analysisText').textContent = displayText;
     document.getElementById('inputSection').style.display = 'none';
     document.getElementById('tipsSection').style.display = 'none';
     document.getElementById('resultSection').classList.add('active');
@@ -586,5 +593,49 @@
   }
   updateUI();
 </script>
+
+<script>
+if (window.location.hash === '#admin') {
+  document.body.innerHTML = '<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0a;color:#fff;font-family:-apple-system,sans-serif;min-height:100vh}.ls{display:flex;align-items:center;justify-content:center;min-height:100vh}.lb{background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:40px;width:360px}.lb h1{font-size:24px;margin-bottom:8px}.lb p{color:#888;margin-bottom:24px;font-size:14px}.db{max-width:900px;margin:0 auto;padding:32px 16px}.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}.st{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}.sc{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px}.sc .n{font-size:32px;font-weight:700;color:#4ade80}.sc .l{color:#888;font-size:13px;margin-top:4px}.sec{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:24px}.sec h2{font-size:16px;margin-bottom:20px;color:#ccc}.fr{display:flex;gap:12px;flex-wrap:wrap}input,select{background:#0a0a0a;border:1px solid #333;color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none}.f1{flex:1;min-width:200px}.btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600}.bg{background:#4ade80;color:#000}.bgr{background:#333;color:#fff}.bf{width:100%;padding:12px;font-size:15px;margin-top:8px}.msg{padding:12px 16px;border-radius:8px;margin-top:12px;font-size:14px;display:none}.ms{background:#052e16;border:1px solid #4ade80;color:#4ade80;display:block}.me{background:#2d0a0a;border:1px solid #ef4444;color:#ef4444;display:block}table{width:100%;border-collapse:collapse}th{text-align:left;padding:10px 12px;color:#888;font-size:12px;border-bottom:1px solid #333}td{padding:12px;font-size:13px;border-bottom:1px solid #1f1f1f}.bv{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}.bg2{background:#052e16;color:#4ade80}.bg3{background:#1f1f1f;color:#888}.lo{background:none;border:1px solid #333;color:#888;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px}.ab{background:none;border:1px solid #333;color:#ccc;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px}</style><div class="ls" id="AL"><div class="lb"><h1>SafeBeli Admin</h1><p>Masukkan admin key</p><input type="password" id="AK" placeholder="Admin Key" style="width:100%;margin-bottom:12px;"><button class="btn bg bf" onclick="AL()">Masuk</button><div class="msg" id="AM"></div></div></div><div class="db" id="AD" style="display:none"><div class="hd"><h1>SafeBeli Admin</h1><button class="lo" onclick="ALO()">Logout</button></div><div class="st"><div class="sc"><div class="n" id="ST">-</div><div class="l">Total User</div></div><div class="sc"><div class="n" id="SP" style="color:#fbbf24">-</div><div class="l">Premium</div></div><div class="sc"><div class="n" id="SF" style="color:#60a5fa">-</div><div class="l">Gratis</div></div></div><div class="sec"><h2>Aktivasi Premium</h2><div class="fr"><input type="email" id="AE" placeholder="Email user..." class="f1"><select id="AM2"><option value="1">1 Bulan</option><option value="3">3 Bulan</option><option value="6">6 Bulan</option><option value="12">12 Bulan</option></select><button class="btn bg" onclick="AAC()">Aktifkan</button></div><div class="msg" id="ACM"></div></div><div class="sec"><h2>Daftar User <button class="btn bgr" style="font-size:12px;padding:4px 12px;margin-left:8px;" onclick="ALU()">Refresh</button></h2><div id="UT"><p style="color:#888">Memuat...</p></div></div></div>';
+
+  let AK = '';
+  function AM(id, txt, ok) { const e = document.getElementById(id); e.textContent = txt; e.className = 'msg ' + (ok ? 'ms' : 'me'); }
+  function AL() {
+    AK = document.getElementById('AK').value.trim();
+    fetch('/api/admin', { headers: { 'x-admin-key': AK } }).then(r => r.json()).then(d => {
+      if (d.success) { document.getElementById('AL').style.display='none'; document.getElementById('AD').style.display='block'; ALU(); }
+      else AM('AM', 'Admin key salah!', false);
+    }).catch(() => AM('AM', 'Koneksi gagal', false));
+  }
+  function ALO() { AK=''; document.getElementById('AL').style.display='flex'; document.getElementById('AD').style.display='none'; }
+  function AAC() {
+    const email = document.getElementById('AE').value.trim();
+    const months = parseInt(document.getElementById('AM2').value);
+    if (!email) return;
+    fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json','x-admin-key':AK}, body:JSON.stringify({email,months}) })
+      .then(r => r.json()).then(d => {
+        if (d.success) { AM('ACM', '✅ ' + d.message, true); document.getElementById('AE').value=''; ALU(); }
+        else AM('ACM', '❌ ' + d.error, false);
+      });
+  }
+  function ALU() {
+    fetch('/api/admin', { headers:{'x-admin-key':AK} }).then(r => r.json()).then(d => {
+      if (!d.success) return;
+      const users = d.users;
+      const prem = users.filter(u => u.is_premium && new Date(u.premium_expires_at) > new Date());
+      document.getElementById('ST').textContent = users.length;
+      document.getElementById('SP').textContent = prem.length;
+      document.getElementById('SF').textContent = users.length - prem.length;
+      const rows = users.map(u => {
+        const ip = u.is_premium && u.premium_expires_at && new Date(u.premium_expires_at) > new Date();
+        return '<tr><td>'+u.email+'</td><td><span class="bv '+(ip?'bg2':'bg3')+'">'+(ip?'Premium':'Gratis')+'</span></td><td>'+(ip?new Date(u.premium_expires_at).toLocaleDateString('id-ID'):'-')+'</td><td><button class="ab" onclick="document.getElementById('AE').value=''+u.email+''">Aktifkan</button></td></tr>';
+      }).join('');
+      document.getElementById('UT').innerHTML = '<table><thead><tr><th>Email</th><th>Status</th><th>Expires</th><th>Aksi</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    });
+  }
+  document.getElementById('AK').addEventListener('keydown', e => { if(e.key==='Enter') AL(); });
+}
+</script>
+
 </body>
 </html>

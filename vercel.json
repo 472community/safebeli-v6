@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/register", "destination": "/api/register.js" },
+    { "source": "/api/login", "destination": "/api/login.js" },
+    { "source": "/api/analyze", "destination": "/api/analyze.js" },
+    { "source": "/api/history", "destination": "/api/history.js" },
+    { "source": "/api/admin", "destination": "/api/admin.js" }
+  ]
+}

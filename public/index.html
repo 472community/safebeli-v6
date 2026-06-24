@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeBeli - Cek Keamanan Belanja</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    :root {
+      --green-dark: #0D2B1F;
+      --green-mid: #1B4332;
+      --green-accent: #40916C;
+      --green-light: #95D5B2;
+      --red: #E63946;
+      --yellow: #FFB703;
+      --white: #F8FAF9;
+      --gray: #8B9E96;
+      --gold: #FFD700;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--green-dark); color: var(--white); min-height: 100vh; }
+
+    /* AUTH */
+    .auth-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; align-items: center; justify-content: center; }
+    .auth-overlay.active { display: flex; }
+    .auth-box { background: var(--green-mid); border-radius: 24px; padding: 32px 24px; width: 90%; max-width: 380px; border: 1px solid rgba(149,213,178,0.2); }
+    .auth-logo { text-align: center; font-size: 24px; font-weight: 800; color: var(--green-light); margin-bottom: 8px; }
+    .auth-logo span { color: var(--white); }
+    .auth-subtitle { text-align: center; font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: rgba(13,43,31,0.5); border-radius: 12px; padding: 4px; }
+    .auth-tab { flex: 1; padding: 10px; border-radius: 10px; border: none; background: transparent; color: var(--gray); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .auth-tab.active { background: var(--green-accent); color: var(--white); }
+    .auth-input { width: 100%; background: rgba(13,43,31,0.8); border: 1.5px solid rgba(149,213,178,0.2); border-radius: 12px; padding: 14px 16px; color: var(--white); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 12px; transition: border-color 0.2s; }
+    .auth-input:focus { border-color: var(--green-accent); }
+    .auth-input::placeholder { color: var(--gray); }
+    .auth-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--green-accent), #52B788); border: none; border-radius: 12px; color: var(--white); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; transition: all 0.2s; }
+    .auth-btn:hover { transform: translateY(-1px); }
+    .auth-error { background: rgba(230,57,70,0.15); border: 1px solid var(--red); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #FF6B6B; margin-bottom: 12px; display: none; }
+    .auth-error.active { display: block; }
+    .guest-btn { width: 100%; padding: 12px; background: transparent; border: 1.5px solid rgba(149,213,178,0.2); border-radius: 12px; color: var(--gray); font-family: inherit; font-size: 13px; cursor: pointer; margin-top: 8px; transition: all 0.2s; }
+    .guest-btn:hover { border-color: var(--green-accent); color: var(--white); }
+
+    /* HEADER */
+    header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(149,213,178,0.15); }
+    .logo { font-size: 20px; font-weight: 800; color: var(--green-light); }
+    .logo span { color: var(--white); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .user-badge { font-size: 12px; background: rgba(64,145,108,0.2); border: 1px solid var(--green-accent); color: var(--green-light); padding: 5px 12px; border-radius: 20px; cursor: pointer; }
+    .user-badge.premium { background: rgba(255,215,0,0.15); border-color: var(--gold); color: var(--gold); }
+    .logout-btn { font-size: 12px; background: transparent; border: 1px solid rgba(149,213,178,0.2); color: var(--gray); padding: 5px 10px; border-radius: 20px; cursor: pointer; }
+
+    /* HERO */
+    .hero { padding: 28px 20px 20px; text-align: center; }
+    .hero-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--green-accent), var(--green-light)); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 28px; box-shadow: 0 8px 32px rgba(64,145,108,0.4); }
+    .hero h1 { font-size: 22px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+    .hero p { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+    /* MAIN */
+    .main-card { margin: 0 16px; background: var(--green-mid); border-radius: 20px; padding: 20px; border: 1px solid rgba(149,213,178,0.15); }
+    .input-label { font-size: 11px; font-weight: 600; color: var(--green-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    textarea { width: 100%; background: rgba(13,43,31,0.8); border: 1.5px solid rgba(149,213,178,0.2); border-radius: 12px; padding: 14px 16px; color: var(--white); font-family: inherit; font-size: 14px; resize: none; height: 90px; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+    textarea:focus { border-color: var(--green-accent); }
+    textarea::placeholder { color: var(--gray); }
+    .platform-btns { display: flex; gap: 8px; margin-bottom: 12px; }
+    .platform-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid rgba(149,213,178,0.2); background: rgba(13,43,31,0.5); color: var(--white); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
+    .platform-btn:hover { border-color: var(--green-accent); }
+    .cek-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--green-accent), #52B788); border: none; border-radius: 14px; color: var(--white); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 20px rgba(64,145,108,0.4); }
+    .cek-btn:hover { transform: translateY(-1px); }
+    .cek-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .free-counter { text-align: center; margin-top: 10px; font-size: 12px; color: var(--gray); }
+    .free-counter span { color: var(--green-light); font-weight: 700; }
+    .free-counter.warning span { color: var(--yellow); }
+    .free-counter.danger span { color: var(--red); }
+
+    /* LOADING */
+    .loading { display: none; text-align: center; padding: 32px 0; }
+    .loading.active { display: block; }
+    .spinner { width: 48px; height: 48px; border: 3px solid rgba(149,213,178,0.2); border-top-color: var(--green-accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: var(--green-light); font-size: 14px; font-weight: 500; }
+
+    /* RESULT */
+    .result-section { display: none; margin: 16px 16px 0; }
+    .result-section.active { display: block; }
+    .score-card { background: var(--green-mid); border-radius: 20px; padding: 24px; text-align: center; margin-bottom: 12px; border: 1px solid rgba(149,213,178,0.15); }
+    .score-circle { width: 100px; height: 100px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 16px; border: 4px solid; }
+    .score-circle.aman { border-color: var(--green-accent); background: rgba(64,145,108,0.15); box-shadow: 0 0 30px rgba(64,145,108,0.3); }
+    .score-circle.hati { border-color: var(--yellow); background: rgba(255,183,3,0.15); box-shadow: 0 0 30px rgba(255,183,3,0.3); }
+    .score-circle.bahaya { border-color: var(--red); background: rgba(230,57,70,0.15); box-shadow: 0 0 30px rgba(230,57,70,0.3); }
+    .score-number { font-size: 32px; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 11px; color: var(--gray); }
+    .status-badge { display: inline-block; padding: 8px 24px; border-radius: 30px; font-size: 15px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
+    .status-badge.aman { background: rgba(64,145,108,0.2); color: var(--green-light); border: 1.5px solid var(--green-accent); }
+    .status-badge.hati { background: rgba(255,183,3,0.2); color: var(--yellow); border: 1.5px solid var(--yellow); }
+    .status-badge.bahaya { background: rgba(230,57,70,0.2); color: var(--red); border: 1.5px solid var(--red); }
+    .analysis-card { background: var(--green-mid); border-radius: 20px; padding: 20px; margin-bottom: 12px; border: 1px solid rgba(149,213,178,0.15); }
+    .analysis-title { font-size: 11px; font-weight: 700; color: var(--green-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .analysis-text { font-size: 14px; line-height: 1.7; color: #CBD5D0; white-space: pre-wrap; }
+    .share-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .share-btn { padding: 12px; border-radius: 12px; border: 1.5px solid rgba(149,213,178,0.2); background: rgba(27,67,50,0.8); color: var(--white); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+    .share-btn:hover { border-color: var(--green-accent); background: rgba(64,145,108,0.2); }
+    .reset-btn { width: 100%; padding: 14px; background: transparent; border: 1.5px solid rgba(149,213,178,0.2); border-radius: 12px; color: var(--gray); font-family: inherit; font-size: 14px; cursor: pointer; margin-bottom: 24px; transition: all 0.2s; }
+    .reset-btn:hover { border-color: var(--green-accent); color: var(--white); }
+
+    /* PAYWALL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: flex-end; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--green-mid); border-radius: 28px 28px 0 0; padding: 32px 24px 40px; width: 100%; max-width: 480px; border-top: 1px solid rgba(149,213,178,0.2); animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-handle { width: 40px; height: 4px; background: rgba(149,213,178,0.3); border-radius: 2px; margin: 0 auto 24px; }
+    .modal h2 { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+    .modal .subtitle { font-size: 14px; color: var(--gray); text-align: center; margin-bottom: 24px; }
+    .plan-card { border-radius: 16px; padding: 20px; margin-bottom: 12px; border: 2px solid; position: relative; }
+    .plan-card.free { border-color: rgba(149,213,178,0.2); background: rgba(13,43,31,0.5); }
+    .plan-card.premium { border-color: var(--gold); background: rgba(255,215,0,0.05); }
+    .plan-card.premium::before { content: '⭐ TERPOPULER'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; font-size: 10px; font-weight: 800; padding: 3px 12px; border-radius: 20px; }
+    .plan-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .plan-name { font-size: 16px; font-weight: 700; }
+    .plan-price { font-size: 20px; font-weight: 800; }
+    .plan-price small { font-size: 12px; font-weight: 400; color: var(--gray); }
+    .plan-features { list-style: none; }
+    .plan-features li { font-size: 13px; color: #CBD5D0; padding: 4px 0; }
+    .plan-features li::before { content: '✓ '; color: var(--green-light); font-weight: 700; }
+    .plan-features li.no::before { content: '✗ '; color: var(--gray); }
+    .plan-features li.no { color: var(--gray); }
+    .subscribe-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--gold), #FFA500); border: none; border-radius: 14px; color: #000; font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 16px; transition: all 0.2s; }
+    .subscribe-btn:hover { transform: translateY(-1px); }
+    .close-modal { width: 100%; padding: 12px; background: transparent; border: none; color: var(--gray); font-family: inherit; font-size: 14px; cursor: pointer; margin-top: 8px; }
+
+    /* HISTORY */
+    .history-section { margin: 16px; }
+    .history-title { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .history-item { background: var(--green-mid); border-radius: 14px; padding: 14px; margin-bottom: 8px; border: 1px solid rgba(149,213,178,0.1); display: flex; align-items: center; justify-content: space-between; }
+    .history-link { font-size: 12px; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .history-score { font-size: 13px; font-weight: 700; }
+    .history-score.aman { color: var(--green-light); }
+    .history-score.hati { color: var(--yellow); }
+    .history-score.bahaya { color: var(--red); }
+
+    /* TIPS */
+    .tips-section { padding: 16px 16px 32px; }
+    .tips-title { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .tip-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: rgba(27,67,50,0.5); border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(149,213,178,0.1); }
+    .tip-icon { font-size: 20px; flex-shrink: 0; }
+    .tip-text h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .tip-text p { font-size: 12px; color: var(--gray); line-height: 1.5; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--green-accent); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; transition: transform 0.3s ease; z-index: 100; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .error-msg { display: none; background: rgba(230,57,70,0.15); border: 1px solid var(--red); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #FF6B6B; margin-top: 12px; }
+    .error-msg.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authModal">
+  <div class="auth-box">
+    <div class="auth-logo">Safe<span>Beli</span></div>
+    <div class="auth-subtitle">Masuk untuk menyimpan riwayat analisis</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Masuk</button>
+      <button class="auth-tab" onclick="switchTab('register')">Daftar</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <input type="email" class="auth-input" id="authEmail" placeholder="Email kamu">
+    <input type="password" class="auth-input" id="authPassword" placeholder="Password (min 6 karakter)">
+    <button class="auth-btn" id="authSubmitBtn" onclick="handleAuth()">Masuk</button>
+    <button class="guest-btn" onclick="continueAsGuest()">Lanjut tanpa akun (3x/hari gratis)</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Safe<span>Beli</span></div>
+  <div class="header-right">
+    <div class="user-badge" id="userBadge" onclick="handleBadgeClick()">🛡️ Masuk</div>
+    <button class="logout-btn" id="logoutBtn" style="display:none" onclick="logout()">Keluar</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-icon">🛡️</div>
+  <h1>Cek Keamanan<br>Sebelum Belanja</h1>
+  <p>Paste link seller atau produk dari Shopee & Tokopedia.<br>AI kami analisis dalam detik.</p>
+</div>
+
+<!-- MAIN INPUT -->
+<div class="main-card" id="inputSection">
+  <div class="input-label">🔗 Tempel Link Di Sini</div>
+  <textarea id="linkInput" placeholder="https://shopee.co.id/seller/... atau https://tokopedia.com/..."></textarea>
+  <div class="platform-btns">
+    <button class="platform-btn" onclick="setPlaceholder('shopee')">🛍️ Shopee</button>
+    <button class="platform-btn" onclick="setPlaceholder('tokopedia')">🟢 Tokopedia</button>
+  </div>
+  <button class="cek-btn" id="cekBtn" onclick="analyzeLink()">🔍 Analisis Sekarang</button>
+  <div class="free-counter" id="freeCounter">Sisa analisis gratis hari ini: <span id="remainingCount">3</span>/3</div>
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<!-- LOADING -->
+<div class="main-card loading" id="loadingSection" style="margin-top:12px;">
+  <div class="spinner"></div>
+  <p>AI sedang menganalisis keamanan...</p>
+</div>
+
+<!-- RESULT -->
+<div class="result-section" id="resultSection">
+  <div class="score-card">
+    <div class="score-circle" id="scoreCircle">
+      <div class="score-number" id="scoreNumber">-</div>
+      <div class="score-label">/100</div>
+    </div>
+    <div class="status-badge" id="statusBadge">MENGANALISIS</div>
+    <p style="font-size:13px; color:var(--gray); margin-top:8px;" id="linkPreview"></p>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-title">📋 Ringkasan AI</div>
+    <div class="analysis-text" id="analysisText"></div>
+  </div>
+  <div class="analysis-card">
+    <div class="analysis-title">📤 Bagikan Hasil</div>
+    <div class="share-btns">
+      <button class="share-btn" onclick="shareWhatsApp()">💬 WhatsApp</button>
+      <button class="share-btn" onclick="shareTelegram()">✈️ Telegram</button>
+      <button class="share-btn" onclick="shareTwitter()">🐦 Twitter/X</button>
+      <button class="share-btn" onclick="copyResult()">📋 Copy</button>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetApp()">← Cek Link Lain</button>
+</div>
+
+<!-- HISTORY (logged in users) -->
+<div class="history-section" id="historySection" style="display:none">
+  <div class="history-title">📊 Riwayat Analisis</div>
+  <div id="historyList"></div>
+</div>
+
+<!-- PAYWALL -->
+<div class="modal-overlay" id="paywallModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>🚀 Upgrade ke Premium</h2>
+    <p class="subtitle">Kamu sudah menggunakan 3 analisis gratis hari ini.<br>Upgrade untuk analisis tanpa batas!</p>
+    <div class="plan-card free">
+      <div class="plan-top">
+        <div class="plan-name">Gratis</div>
+        <div class="plan-price">Rp 0 <small>/bulan</small></div>
+      </div>
+      <ul class="plan-features">
+        <li>3 analisis per hari</li>
+        <li class="no">Riwayat analisis</li>
+        <li class="no">Analisis tanpa batas</li>
+      </ul>
+    </div>
+    <div class="plan-card premium">
+      <div class="plan-top">
+        <div class="plan-name">⭐ Premium</div>
+        <div class="plan-price">Rp 65.000 <small>/bulan</small></div>
+      </div>
+      <ul class="plan-features">
+        <li>Analisis TANPA BATAS</li>
+        <li>Riwayat 30 hari</li>
+        <li>Prioritas antrian AI</li>
+        <li>Support prioritas</li>
+      </ul>
+    </div>
+    <button class="subscribe-btn" onclick="handleSubscribe()">⭐ Mulai Premium — Rp 65.000/bulan</button>
+    <button class="close-modal" onclick="closePaywall()">Lanjut pakai gratis (reset besok)</button>
+  </div>
+</div>
+
+<!-- TIPS -->
+<div class="tips-section" id="tipsSection">
+  <div class="tips-title">💡 Tips Belanja Aman</div>
+  <div class="tip-card">
+    <div class="tip-icon">⭐</div>
+    <div class="tip-text">
+      <h4>Cek Rating Penjual</h4>
+      <p>Penjual terpercaya biasanya memiliki rating di atas 4.5 dan sudah berjualan lebih dari 6 bulan.</p>
+    </div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-icon">📸</div>
+    <div class="tip-text">
+      <h4>Foto Produk Asli</h4>
+      <p>Waspadai penjual yang hanya menggunakan foto produk dari internet tanpa foto asli.</p>
+    </div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-icon">💰</div>
+    <div class="tip-text">
+      <h4>Harga Terlalu Murah</h4>
+      <p>Harga jauh di bawah pasar bisa menjadi tanda penipuan. Selalu bandingkan dengan penjual lain.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const FREE_LIMIT = 3;
+  let currentResult = '';
+  let currentLink = '';
+  let authMode = 'login';
+
+  // ── AUTH STATE ──
+  function getToken() { return localStorage.getItem('sb_token'); }
+  function getUser() { const u = localStorage.getItem('sb_user'); return u ? JSON.parse(u) : null; }
+  function isGuest() { return localStorage.getItem('sb_guest') === 'true'; }
+  function isPremium() {
+    const user = getUser();
+    if (!user) return false;
+    if (!user.is_premium) return false;
+    if (user.premium_expires_at && new Date(user.premium_expires_at) < new Date()) return false;
+    return true;
+  }
+
+  // ── USAGE ──
+  function getTodayKey() { return 'sb_usage_' + new Date().toISOString().slice(0, 10); }
+  function getUsage() { return parseInt(localStorage.getItem(getTodayKey()) || '0'); }
+  function incUsage() { localStorage.setItem(getTodayKey(), getUsage() + 1); }
+  function getRemaining() { if (isPremium()) return 999; return Math.max(0, FREE_LIMIT - getUsage()); }
+
+  // ── UI ──
+  function updateUI() {
+    const user = getUser();
+    const badge = document.getElementById('userBadge');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const counter = document.getElementById('freeCounter');
+    const remaining = getRemaining();
+
+    if (user) {
+      badge.textContent = isPremium() ? '⭐ Premium' : '👤 ' + user.email.split('@')[0];
+      badge.className = 'user-badge' + (isPremium() ? ' premium' : '');
+      logoutBtn.style.display = 'block';
+      document.getElementById('historySection').style.display = 'block';
+      loadHistory();
+    } else {
+      badge.textContent = '🛡️ Masuk';
+      badge.className = 'user-badge';
+      logoutBtn.style.display = 'none';
+      document.getElementById('historySection').style.display = 'none';
+    }
+
+    if (isPremium()) {
+      counter.innerHTML = '⭐ <span>Premium</span> — Analisis tanpa batas';
+      counter.className = 'free-counter';
+    } else {
+      document.getElementById('remainingCount').textContent = remaining;
+      counter.className = 'free-counter' + (remaining === 0 ? ' danger' : remaining === 1 ? ' warning' : '');
+    }
+  }
+
+  function switchTab(mode) {
+    authMode = mode;
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.className = 'auth-tab' + ((i === 0 && mode === 'login') || (i === 1 && mode === 'register') ? ' active' : '');
+    });
+    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Masuk' : 'Daftar';
+    document.getElementById('authError').className = 'auth-error';
+  }
+
+  function handleBadgeClick() {
+    if (!getUser()) showAuthModal();
+  }
+
+  function showAuthModal() {
+    document.getElementById('authModal').classList.add('active');
+  }
+
+  function continueAsGuest() {
+    localStorage.setItem('sb_guest', 'true');
+    document.getElementById('authModal').classList.remove('active');
+    updateUI();
+  }
+
+  async function handleAuth() {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const errEl = document.getElementById('authError');
+
+    if (!email || !password) {
+      errEl.textContent = 'Email dan password wajib diisi';
+      errEl.className = 'auth-error active';
+      return;
+    }
+
+    const btn = document.getElementById('authSubmitBtn');
+    btn.textContent = 'Loading...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/' + authMode, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        errEl.textContent = data.error;
+        errEl.className = 'auth-error active';
+      } else {
+        if (authMode === 'login') {
+          localStorage.setItem('sb_token', data.token);
+          localStorage.setItem('sb_user', JSON.stringify(data.user));
+        } else {
+          showToast('✅ Akun berhasil dibuat! Silakan masuk.');
+          switchTab('login');
+          btn.textContent = 'Masuk';
+          btn.disabled = false;
+          return;
+        }
+        document.getElementById('authModal').classList.remove('active');
+        updateUI();
+        showToast('✅ Berhasil masuk!');
+      }
+    } catch (e) {
+      errEl.textContent = 'Terjadi kesalahan. Coba lagi.';
+      errEl.className = 'auth-error active';
+    }
+
+    btn.textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+    btn.disabled = false;
+  }
+
+  function logout() {
+    localStorage.removeItem('sb_token');
+    localStorage.removeItem('sb_user');
+    localStorage.removeItem('sb_guest');
+    updateUI();
+    showToast('👋 Berhasil keluar');
+  }
+
+  async function loadHistory() {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/api/history', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      if (data.history && data.history.length > 0) {
+        const list = document.getElementById('historyList');
+        list.innerHTML = data.history.slice(0, 5).map(h => `
+          <div class="history-item">
+            <div class="history-link">${h.link}</div>
+            <div class="history-score ${(h.status||'').toLowerCase() === 'aman' ? 'aman' : (h.status||'').toLowerCase() === 'bahaya' ? 'bahaya' : 'hati'}">
+              ${h.score || '-'}/100 ${h.status || ''}
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (e) {}
+  }
+
+  // ── ANALYZE ──
+  async function analyzeLink() {
+    const link = document.getElementById('linkInput').value.trim();
+    if (!link) { showError('⚠️ Masukkan link seller atau produk terlebih dahulu.'); return; }
+    if (!link.includes('shopee') && !link.includes('tokopedia') && !link.includes('http')) {
+      showError('⚠️ Masukkan link yang valid dari Shopee atau Tokopedia.');
+      return;
+    }
+
+    if (!getUser() && !isGuest()) { showAuthModal(); return; }
+    if (!isPremium() && getUsage() >= FREE_LIMIT) { showPaywall(); return; }
+
+    currentLink = link;
+    hideError();
+    showLoading();
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      const token = getToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ link, token: getToken() })
+      });
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      incUsage();
+      updateUI();
+
+      currentResult = data.analysis ? JSON.stringify(data.analysis) : data.result;
+      showResult(data.analysis, link);
+
+      if (!isPremium() && getRemaining() === 0) {
+        setTimeout(() => showPaywall(), 3000);
+      }
+    } catch (e) {
+      hideLoading();
+      showError('❌ Gagal menganalisis. Error: ' + e.message);
+    }
+  }
+
+  function parseResult(text) {
+    if (typeof text === "object" && text !== null) return { score: text.score || 50, status: text.status || "HATI-HATI" };
+    return {
+      score: parseInt((text.match(/SKOR:\s*(\d+)/) || [])[1] || 50),
+      status: ((text.match(/STATUS:\s*(AMAN|HATI-HATI|BAHAYA)/) || [])[1] || 'HATI-HATI')
+    };
+  }
+
+  function showResult(text, link) {
+    hideLoading();
+    const { score, status } = parseResult(text);
+    const circle = document.getElementById('scoreCircle');
+    const badge = document.getElementById('statusBadge');
+    circle.className = 'score-circle';
+    badge.className = 'status-badge';
+    if (status === 'AMAN') { circle.classList.add('aman'); badge.classList.add('aman'); badge.textContent = '✅ AMAN'; }
+    else if (status === 'HATI-HATI') { circle.classList.add('hati'); badge.classList.add('hati'); badge.textContent = '⚠️ HATI-HATI'; }
+    else { circle.classList.add('bahaya'); badge.classList.add('bahaya'); badge.textContent = '🚨 BAHAYA'; }
+    document.getElementById('scoreNumber').textContent = score;
+    document.getElementById('linkPreview').textContent = link.length > 50 ? link.substring(0, 50) + '...' : link;
+    const displayText = typeof text === 'object' ? (text.summary + '
+
+' + (text.details || []).join('
+')) : text;
+    document.getElementById('analysisText').textContent = displayText;
+    document.getElementById('inputSection').style.display = 'none';
+    document.getElementById('tipsSection').style.display = 'none';
+    document.getElementById('resultSection').classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function resetApp() {
+    document.getElementById('inputSection').style.display = 'block';
+    document.getElementById('tipsSection').style.display = 'block';
+    document.getElementById('resultSection').classList.remove('active');
+    document.getElementById('linkInput').value = '';
+    currentResult = '';
+    currentLink = '';
+    updateUI();
+    loadHistory();
+  }
+
+  function setPlaceholder(p) {
+    document.getElementById('linkInput').placeholder = p === 'shopee' ? 'https://shopee.co.id/...' : 'https://www.tokopedia.com/...';
+    document.getElementById('linkInput').focus();
+  }
+
+  function showLoading() { document.getElementById('cekBtn').disabled = true; document.getElementById('loadingSection').classList.add('active'); }
+  function hideLoading() { document.getElementById('cekBtn').disabled = false; document.getElementById('loadingSection').classList.remove('active'); }
+  function showError(m) { const e = document.getElementById('errorMsg'); e.textContent = m; e.classList.add('active'); }
+  function hideError() { document.getElementById('errorMsg').classList.remove('active'); }
+  function showPaywall() { document.getElementById('paywallModal').classList.add('active'); }
+  function closePaywall() { document.getElementById('paywallModal').classList.remove('active'); }
+
+  function handleSubscribe() {
+    const user = getUser();
+    const email = user ? user.email : '';
+    const msg = encodeURIComponent('Halo! Saya mau upgrade ke SafeBeli Premium%0A%0A✅ Paket: Premium — Rp 65.000/bulan%0A✅ Analisis TANPA BATAS per hari%0A%0AEmail akun saya: ' + email + '%0A%0AMohon info cara pembayarannya. Terima kasih!');
+    showToast('🚀 Mengarahkan ke WhatsApp...');
+    setTimeout(() => window.open('https://wa.me/821056929907?text=' + msg, '_blank'), 800);
+    closePaywall();
+  }
+
+  function getShareText() {
+    const { score, status } = parseResult(currentResult);
+    const e = status === 'AMAN' ? '✅' : status === 'HATI-HATI' ? '⚠️' : '🚨';
+    return `${e} Saya baru cek keamanan toko ini pakai SafeBeli AI!\n\nLink: ${currentLink}\nSkor: ${score}/100 - ${status}\n\nCek toko kamu juga! 🛡️`;
+  }
+
+  function shareWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent(getShareText()), '_blank'); }
+  function shareTelegram() { window.open('https://t.me/share/url?url=' + encodeURIComponent(currentLink) + '&text=' + encodeURIComponent(getShareText()), '_blank'); }
+  function shareTwitter() {
+    const { score, status } = parseResult(currentResult);
+    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(`Cek keamanan toko pakai SafeBeli AI! Skor: ${score}/100 - ${status} 🛡️ #SafeBeli #BelanjaAman`), '_blank');
+  }
+  function copyResult() { navigator.clipboard.writeText(getShareText()).then(() => showToast('✅ Disalin!')); }
+
+  function showToast(m) {
+    const t = document.getElementById('toast');
+    t.textContent = m;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── INIT ──
+  if (!getUser() && !isGuest()) {
+    setTimeout(() => showAuthModal(), 500);
+  }
+  updateUI();
+</script>
+</body>
+</html>

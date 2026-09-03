@@ -1,0 +1,29 @@
+{
+  "$comment": "커뮤니티 정보. Claude 가 글을 쓸 때 이 파일을 읽는다. 비어 있는 항목은 채워주세요 — 채울수록 카피가 정확해집니다.",
+
+  "name": "",
+  "oneLiner": "",
+  "audience": "",
+
+  "telegramValue": "",
+  "$telegramValue_help": "텔레그램에 들어와야만 얻는 것. 여기가 비면 유입은 안 생깁니다. 예: '매일 아침 큐레이션', '멤버 전용 Q&A', '먼저 공개되는 자료'",
+
+  "language": "ko",
+  "timezone": "Asia/Seoul",
+
+  "tone": {
+    "do": [],
+    "dont": []
+  },
+
+  "contentAxes": [],
+  "$contentAxes_help": "소재 고갈을 막는 축. 5~7개 권장. 예: '실전 사례 해부', '체크리스트', '내가 틀렸던 것', '숫자 공개', '도구/템플릿'",
+
+  "hashtags": {
+    "instagram": [],
+    "threads": []
+  },
+
+  "banned": [],
+  "$banned_help": "절대 쓰지 말아야 할 표현/주장 (과장, 수익보장, 경쟁사 비방 등)"
+}

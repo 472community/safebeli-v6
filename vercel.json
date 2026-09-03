@@ -5,7 +5,6 @@
     { "source": "/api/analyze", "destination": "/api/analyze.js" },
     { "source": "/api/history", "destination": "/api/history.js" },
     { "source": "/api/admin", "destination": "/api/admin.js" },
-    { "source": "/api/telegram-webhook", "destination": "/api/telegram-webhook.js" },
     { "source": "/admin", "destination": "/api/admin-page.js" }
   ]
 }

@@ -25,14 +25,17 @@ const path = require('path');
 const env = process.env;
 
 const config = {
-  // 공개 사이트 (이미지 호스팅 + 링크 기본값)
-  siteUrl: (env.MARKETING_SITE_URL || 'https://safebeli.vercel.app').replace(/\/$/, ''),
+  // 이미지 호스팅 베이스 URL (인스타는 공개 URL 이미지만 받는다)
+  mediaBaseUrl: (env.MARKETING_MEDIA_BASE_URL || '').replace(/\/$/, ''),
+
+  // 텔레그램 신규 유입에게 자동으로 보낼 환영 메시지 (비우면 안 보냄)
+  welcomeMessage: env.TELEGRAM_WELCOME_MESSAGE || '',
 
   telegram: {
     botToken: env.TELEGRAM_BOT_TOKEN || '',
     chatId: env.TELEGRAM_CHAT_ID || '',        // 채널: @myChannel 또는 -100xxxxxxxxxx
     botUsername: (env.TELEGRAM_BOT_USERNAME || '').replace(/^@/, ''),
-    channelUrl: env.TELEGRAM_CHANNEL_URL || ''  // 예: https://t.me/safebeli
+    channelUrl: env.TELEGRAM_CHANNEL_URL || ''  // 예: https://t.me/my_channel
   },
 
   threads: {
@@ -83,7 +86,7 @@ function telegramLink(source) {
     return `https://t.me/${t.botUsername}?start=${s}`;
   }
   if (t.channelUrl) return t.channelUrl;
-  return config.siteUrl;
+  return '';
 }
 
 module.exports = { config, isReady, readyPlatforms, telegramLink };

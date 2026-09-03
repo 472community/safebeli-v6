@@ -1,0 +1,5 @@
+{
+  "$comment": "텔레그램 유입 기록. collect-leads.js 가 자동으로 갱신한다. offset 은 텔레그램 getUpdates 커서.",
+  "offset": 0,
+  "leads": []
+}

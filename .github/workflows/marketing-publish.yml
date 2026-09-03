@@ -1,0 +1,84 @@
+name: SNS 자동 발행 & 유입 수집
+
+# 매시: (1) 발행 시각이 지난 글을 각 SNS 로 내보내고
+#       (2) 텔레그램으로 들어온 신규 유입을 출처와 함께 기록한다.
+# (schedule 트리거는 항상 기본 브랜치의 워크플로/큐를 사용한다)
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '실제로 발행하지 않고 미리보기만'
+        type: boolean
+        default: false
+      post_id:
+        description: '특정 글 id 만 즉시 발행 (비우면 예약분 전체)'
+        type: string
+        default: ''
+
+concurrency:
+  group: marketing-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  MARKETING_MEDIA_BASE_URL: ${{ vars.MARKETING_MEDIA_BASE_URL }}
+  TELEGRAM_WELCOME_MESSAGE: ${{ vars.TELEGRAM_WELCOME_MESSAGE }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  TELEGRAM_BOT_USERNAME: ${{ vars.TELEGRAM_BOT_USERNAME }}
+  TELEGRAM_LINK_MODE: ${{ vars.TELEGRAM_LINK_MODE }}
+  TELEGRAM_CHANNEL_URL: ${{ vars.TELEGRAM_CHANNEL_URL }}
+  THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+  THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+  IG_USER_ID: ${{ secrets.IG_USER_ID }}
+  IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+  TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+  TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+  TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+  TIKTOK_PRIVACY_LEVEL: ${{ vars.TIKTOK_PRIVACY_LEVEL }}
+  YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+  YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+  YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 발행
+        run: |
+          ARGS=""
+          if [ "${{ inputs.dry_run }}" != "true" ]; then ARGS="--live"; fi
+          if [ -n "${{ inputs.post_id }}" ]; then ARGS="$ARGS --id ${{ inputs.post_id }} --now"; fi
+          node marketing/publish.js $ARGS
+
+      # 발행이 실패해도 유입 수집은 계속한다 (별개 관심사)
+      - name: 텔레그램 유입 수집
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        run: node marketing/collect-leads.js
+
+      - name: 발행 결과 · 유입 기록 커밋
+        if: always()
+        run: |
+          if git diff --quiet -- marketing/content/; then
+            echo "변경 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add marketing/content/
+          git commit -m "chore(marketing): 발행 결과 및 유입 기록 [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

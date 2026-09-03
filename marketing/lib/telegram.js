@@ -1,13 +1,15 @@
 'use strict';
 const { config } = require('./config');
 const { api, form } = require('./util');
+const media = require('./media');
 
 const base = () => `https://api.telegram.org/bot${config.telegram.botToken}`;
 
 /** 텔레그램 채널/그룹에 발행. 이미지가 있으면 sendPhoto, 없으면 sendMessage. */
-async function publish({ text, media = [] }) {
+async function publish(post) {
+  const text = post.text || '';
   const chat_id = config.telegram.chatId;
-  const photo = media[0];
+  const photo = media.imageUrls(post)[0];
 
   if (photo) {
     // 캡션 상한 1024자. 초과분은 후속 메시지로 분리.

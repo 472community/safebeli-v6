@@ -1,8 +1,8 @@
 'use strict';
 const fs = require('fs');
-const path = require('path');
 const { config } = require('./config');
 const { api, form } = require('./util');
+const media = require('./media');
 
 /**
  * YouTube Data API v3 업로드 (Shorts 포함 — 세로 60초 이하 영상이면 자동으로 Shorts 처리).
@@ -22,54 +22,64 @@ async function accessToken() {
 }
 
 /**
- * @param {{text:string, video:string, title?:string, tags?:string[], privacy?:string}} post
- *   video: 로컬 파일 경로 (리포 루트 기준 상대경로 허용)
+ * 영상 업로드. 세로 3분 이하 영상은 유튜브가 자동으로 Shorts 로 처리한다.
+ * 영상은 큐의 video(로컬 경로) 또는 videoUrl(공개 주소) 어느 쪽이든 된다.
  */
-async function publish({ text, video, title, tags = [], privacy = 'public' }) {
-  if (!video) throw new Error('YouTube는 video(로컬 파일 경로)가 필요합니다');
-  const file = path.isAbsolute(video) ? video : path.join(__dirname, '..', '..', video);
-  if (!fs.existsSync(file)) throw new Error(`영상 파일 없음: ${file}`);
+async function publish(post) {
+  const { file, cleanup } = await media.videoFile(post);
+  try {
+    const token = await accessToken();
 
-  const token = await accessToken();
-  const meta = {
-    snippet: {
-      title: (title || text.split('\n')[0]).slice(0, 100),
-      description: text.slice(0, 5000),
-      tags: tags.slice(0, 30),
-      categoryId: '22'
-    },
-    status: { privacyStatus: privacy, selfDeclaredMadeForKids: false }
-  };
-
-  // 1) resumable 세션 시작
-  const start = await fetch(
-    'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'X-Upload-Content-Type': 'video/*'
-      },
-      body: JSON.stringify(meta)
+    let description = (post.text || '').slice(0, 4900);
+    if (post.shorts !== false && !/#shorts/i.test(description)) {
+      description = `${description}\n\n#Shorts`;
     }
-  );
-  if (!start.ok) throw new Error(`업로드 세션 실패: ${start.status} ${await start.text()}`);
-  const uploadUrl = start.headers.get('location');
-  if (!uploadUrl) throw new Error('업로드 URL을 받지 못했습니다');
 
-  // 2) 본문 업로드
-  const stat = fs.statSync(file);
-  const res = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Length': String(stat.size), 'Content-Type': 'video/*' },
-    body: fs.createReadStream(file),
-    duplex: 'half'
-  });
-  const body = await res.json();
-  if (!res.ok) throw new Error(`업로드 실패: ${res.status} ${JSON.stringify(body)}`);
+    const meta = {
+      snippet: {
+        title: (post.title || (post.text || '').split('\n')[0]).slice(0, 100),
+        description,
+        tags: (post.tags || []).slice(0, 30),
+        categoryId: '22'
+      },
+      status: {
+        privacyStatus: post.privacy || 'public',
+        selfDeclaredMadeForKids: false
+      }
+    };
 
-  return { id: body.id, url: `https://youtu.be/${body.id}` };
+    // 1) resumable 세션 시작
+    const start = await fetch(
+      'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-Upload-Content-Type': 'video/*'
+        },
+        body: JSON.stringify(meta)
+      }
+    );
+    if (!start.ok) throw new Error(`업로드 세션 실패: ${start.status} ${await start.text()}`);
+    const uploadUrl = start.headers.get('location');
+    if (!uploadUrl) throw new Error('업로드 URL을 받지 못했습니다');
+
+    // 2) 본문 업로드
+    const size = fs.statSync(file).size;
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Length': String(size), 'Content-Type': 'video/*' },
+      body: fs.createReadStream(file),
+      duplex: 'half'
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(`업로드 실패: ${res.status} ${JSON.stringify(body)}`);
+
+    return { id: body.id, url: `https://youtu.be/${body.id}` };
+  } finally {
+    cleanup();
+  }
 }
 
 async function check() {

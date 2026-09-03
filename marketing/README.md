@@ -15,9 +15,9 @@
 |---|---|---|---|
 | **텔레그램** | ✅ 완전 자동 | 봇 토큰 (5분) | 가장 쉽고 제한 거의 없음 |
 | **스레드** | ✅ 완전 자동 | Meta 앱 + 장기 토큰 | 텍스트/이미지, 본문 500자 |
-| **인스타그램** | ✅ 완전 자동 | 프로페셔널 계정 + Meta 앱 | **이미지 필수**, 24시간 25건 제한 |
-| **유튜브** | ✅ 영상 업로드 자동 | Google Cloud OAuth | 커뮤니티 탭 글은 API 없음 → 수동 |
-| 틱톡 | ⚠️ 앱 심사 통과 시 | Content Posting API | 심사 오래 걸림, 나중에 |
+| **인스타그램 (피드·캐러셀·릴스)** | ✅ 완전 자동 | 프로페셔널 계정 + Meta 앱 | **이미지/영상 필수**, 24시간 25건 제한 |
+| **유튜브 (쇼츠 포함)** | ✅ 완전 자동 | Google Cloud OAuth | 세로 3분 이하면 자동으로 쇼츠 처리. 커뮤니티 탭 글은 API 없음 |
+| **틱톡** | ⚠️ 업로드는 자동, 공개는 심사 후 | TikTok 개발자 앱 | **심사 전에는 비공개로만 게시됨** (아래 E 참고) |
 | X(트위터) | ⚠️ 무료 등급 제한 심함 | API v2 | 필요해지면 추가 |
 
 **커넥터로는 안 됩니다.** Anthropic 커넥터 목록에 인스타/스레드/유튜브/텔레그램이 아직 없어서
@@ -114,9 +114,13 @@ node marketing/collect-leads.js --report   # 집계만
 
 얻는 값: `IG_USER_ID`, `IG_ACCESS_TOKEN`
 
-**이미지 호스팅**: 인스타는 공개 URL 이미지만 받습니다.
+**릴스**: 큐에 `videoUrl` 이 있으면 자동으로 릴스로 올라갑니다 (`share_to_feed` 켜져 있어 피드에도 노출).
+`media` 의 첫 이미지는 커버로 쓰입니다.
+
+**미디어 호스팅**: 인스타는 공개 URL 만 받습니다 (파일 업로드 불가).
 어디든 공개 접근되는 곳(오브젝트 스토리지, 정적 호스팅, GitHub Raw 등)에 올리고
 그 베이스 주소를 `MARKETING_MEDIA_BASE_URL` 에 넣으세요.
+그러면 큐에는 `videos/파일명.mp4` 같은 상대경로만 적으면 됩니다.
 
 ---
 
@@ -129,6 +133,35 @@ node marketing/collect-leads.js --report   # 집계만
 
 얻는 값: `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN`
 
+세로 3분 이하 영상은 유튜브가 알아서 **쇼츠**로 처리합니다. 설명란에 `#Shorts` 도 자동으로 붙습니다.
+
+---
+
+## E. 틱톡 (25분 + 심사 대기)
+
+1. https://developers.tiktok.com → 앱 생성
+2. **Content Posting API** 추가, 스코프 `video.publish` + `user.info.basic`
+3. Login Kit 으로 OAuth 인증 → **refresh token** 획득 (유효기간 1년)
+
+얻는 값: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`
+
+### ⚠️ 틱톡만 다른 점 — 반드시 읽으세요
+
+틱톡은 **앱 심사(Audit)를 통과하기 전까지 공개 게시가 안 됩니다.**
+심사 전에는 업로드는 되지만 전부 **비공개(SELF_ONLY)** 로 올라가고,
+틱톡 앱에서 직접 공개로 전환해야 합니다.
+
+그래서 실제 운영은 이렇게 됩니다:
+
+| 시점 | 자동화 범위 | 대표님이 할 일 |
+|---|---|---|
+| 심사 전 | 업로드까지 자동 | 틱톡 앱에서 공개 전환 (1분) |
+| 심사 후 | 공개 게시까지 전자동 | 없음 |
+
+심사 통과 후 `TIKTOK_PRIVACY_LEVEL=PUBLIC_TO_EVERYONE` 을 Variables 에 넣으면 전자동이 됩니다.
+발행기는 게시 전에 틱톡에 허용 범위를 물어보고, 허용되지 않은 값은 쓰지 않습니다
+(잘못된 값을 보내면 거부되기 때문입니다).
+
 ---
 
 ## 토큰 넣는 곳
@@ -137,10 +170,61 @@ node marketing/collect-leads.js --report   # 집계만
 
 Secrets (비밀):
 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN`,
-`IG_USER_ID`, `IG_ACCESS_TOKEN`, `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN`
+`IG_USER_ID`, `IG_ACCESS_TOKEN`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`,
+`YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN`
 
 Variables (공개돼도 되는 값):
-`MARKETING_MEDIA_BASE_URL`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_CHANNEL_URL`, `TELEGRAM_WELCOME_MESSAGE`
+`MARKETING_MEDIA_BASE_URL`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_CHANNEL_URL`,
+`TELEGRAM_WELCOME_MESSAGE`, `TIKTOK_PRIVACY_LEVEL`
+
+---
+
+## 영상 하나로 3곳 (틱톡 · 릴스 · 쇼츠)
+
+큐에 `videoUrl` 하나만 적으면 세 플랫폼이 알아서 나눠 가집니다.
+
+```json
+{
+  "platforms": ["tiktok", "instagram", "youtube"],
+  "videoUrl": "videos/2026-09-12-leverage-time.mp4",
+  "text": "공통 캡션 ... {{link}}",
+  "variants": { "youtube": "유튜브용 긴 설명 ... {{link}}" }
+}
+```
+
+- **인스타 릴스**는 공개 URL 을 그대로 넘깁니다
+- **틱톡 · 유튜브**는 파일 바이트를 올려야 해서, 발행기가 그 URL 에서 **자동으로 받아** 업로드합니다
+- 그래서 대표님은 영상을 **한 군데만** 올리면 됩니다
+
+**권장 규격**: 세로 9:16, 1080×1920, 30~60초, mp4(H.264/AAC)
+세 플랫폼 모두 이 규격이면 그대로 통과합니다.
+
+**추적**: 같은 영상이라도 플랫폼마다 다른 링크가 붙습니다 —
+`tt_...`(틱톡) / `ig_...`(릴스) / `yt_...`(쇼츠).
+어느 플랫폼이 사람을 데려왔는지 따로 잡힙니다.
+
+---
+
+## 거래소 레퍼럴 링크
+
+`brand.json` 의 `revenue.referral.exchanges` 에 등록합니다.
+
+```json
+"exchanges": [
+  { "name": "바이낸스", "url": "https://..." },
+  { "name": "비트겟",  "url": "https://..." }
+]
+```
+
+본문에서는 `{{ref}}`(대표 거래소) 또는 `{{ref:비트겟}}`(지정) 으로 씁니다.
+
+**중요 — 발행기가 막습니다:**
+`{{ref}}` 는 **텔레그램과 유튜브 설명란에서만** 허용됩니다.
+스레드·인스타·틱톡 본문에 넣으면 발행이 거부됩니다.
+이 세 곳은 제휴 링크를 스팸으로 판정해서 도달을 죽이거나 계정을 제재하기 때문입니다.
+**우회가 아니라 정석입니다.** SNS 의 CTA 는 텔레그램 하나뿐입니다.
+
+(유튜브 설명란에 제휴 링크를 넣을 때는 유료 프로모션 표시를 함께 해주세요.)
 
 로컬 테스트는 `cp marketing/.env.example marketing/.env` 후 채우세요. (`.gitignore` 처리됨)
 

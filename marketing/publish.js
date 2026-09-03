@@ -10,16 +10,32 @@
  */
 const queue = require('./lib/queue');
 const { isReady, telegramLink } = require('./lib/config');
+const brand = require('./lib/brand');
+const media = require('./lib/media');
 const { C } = require('./lib/util');
 
 const ADAPTERS = {
   telegram: require('./lib/telegram'),
   threads: require('./lib/threads'),
   instagram: require('./lib/instagram'),
+  tiktok: require('./lib/tiktok'),
   youtube: require('./lib/youtube')
 };
 
-const SOURCE_CODE = { telegram: 'tg', threads: 'th', instagram: 'ig', youtube: 'yt' };
+const SOURCE_CODE = {
+  telegram: 'tg',
+  threads: 'th',
+  instagram: 'ig',
+  tiktok: 'tt',
+  youtube: 'yt'
+};
+
+/**
+ * 거래소 레퍼럴 링크를 본문에 넣어도 되는 곳.
+ * 스레드·인스타·틱톡은 제휴 링크를 스팸으로 판정해 도달을 죽이거나 계정을 제재한다.
+ * 유튜브 설명란은 허용되지만 유료 프로모션 표시가 필요하다.
+ */
+const REFERRAL_ALLOWED = new Set(['telegram', 'youtube']);
 
 function parseArgs(argv) {
   const a = { live: false, now: false, id: null, platform: null };
@@ -33,11 +49,29 @@ function parseArgs(argv) {
   return a;
 }
 
-/** 본문의 {{link}} 를 플랫폼별 유입추적 텔레그램 링크로 치환 */
+/**
+ * 본문 치환.
+ *   {{link}}        → 플랫폼·글별 유입추적 텔레그램 링크
+ *   {{ref}}         → 대표 거래소 레퍼럴 링크
+ *   {{ref:이름}}    → 지정 거래소 레퍼럴 링크
+ */
 function render(post, platform) {
   const raw = (post.variants && post.variants[platform]) || post.text || '';
   const source = `${SOURCE_CODE[platform] || platform}_${String(post.id).replace(/[^A-Za-z0-9_]/g, '_')}`;
-  return raw.split('{{link}}').join(telegramLink(source)).trim();
+
+  let out = raw.split('{{link}}').join(telegramLink(source));
+
+  if (/\{\{ref(:[^}]+)?\}\}/.test(out)) {
+    if (!REFERRAL_ALLOWED.has(platform)) {
+      throw new Error(
+        `${platform} 본문에는 레퍼럴 링크를 넣을 수 없습니다 (스팸 판정·계정 제재 위험). ` +
+          '{{ref}} 를 빼고 CTA 는 {{link}}(텔레그램) 하나로 두세요.'
+      );
+    }
+    out = out.replace(/\{\{ref(?::([^}]+))?\}\}/g, (_, name) => brand.referralLink(name));
+  }
+
+  return out.trim();
 }
 
 async function main() {
@@ -84,15 +118,25 @@ async function main() {
         console.log(C.red(`  ${platform}: 지원하지 않는 플랫폼`));
         continue;
       }
-      const text = render(post, platform);
+      let text;
+      try {
+        text = render(post, platform);
+      } catch (e) {
+        // 치환 규칙 위반은 발행 전에 잡는다. 한 건이 나머지 발행을 막지 않게 한다.
+        failures++;
+        console.log(C.red(`  ${platform}: ${e.message}`));
+        continue;
+      }
 
       // 드라이런은 자격증명이 없어도 초안을 그대로 보여준다 (검수용).
       if (!args.live) {
         const mark = isReady(platform) ? C.green('●') : C.yellow('○ 자격증명 미설정');
         console.log(`  ${C.bold(platform)} ${mark}`);
         console.log(text.split('\n').map((l) => '    │ ' + l).join('\n'));
-        if (post.media && post.media.length) console.log(C.gray(`    이미지: ${post.media.join(', ')}`));
-        if (post.video) console.log(C.gray(`    영상: ${post.video}`));
+        const imgs = media.imageUrls(post);
+        if (imgs.length) console.log(C.gray(`    이미지: ${imgs.join(', ')}`));
+        const vid = media.videoUrl(post) || post.video;
+        if (vid) console.log(C.gray(`    영상: ${vid}`));
         continue;
       }
 
@@ -102,13 +146,7 @@ async function main() {
       }
 
       try {
-        const r = await adapter.publish({
-          text,
-          media: post.media || [],
-          video: post.video,
-          title: post.title,
-          tags: post.tags || []
-        });
+        const r = await adapter.publish({ ...post, text });
         post.results[platform] = { ok: true, id: r.id, url: r.url || null, at: new Date().toISOString() };
         changed = true;
         console.log(C.green(`  ${platform}: 발행 완료 ${r.url || r.id}`));

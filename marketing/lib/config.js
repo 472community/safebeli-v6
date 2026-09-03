@@ -50,6 +50,14 @@ const config = {
     apiVersion: env.IG_API_VERSION || 'v21.0'
   },
 
+  tiktok: {
+    clientKey: env.TIKTOK_CLIENT_KEY || '',
+    clientSecret: env.TIKTOK_CLIENT_SECRET || '',
+    refreshToken: env.TIKTOK_REFRESH_TOKEN || '',
+    // 앱 심사 전에는 SELF_ONLY(비공개)만 허용된다. 심사 후 PUBLIC_TO_EVERYONE 로 바꾼다.
+    privacyLevel: env.TIKTOK_PRIVACY_LEVEL || ''
+  },
+
   youtube: {
     clientId: env.YT_CLIENT_ID || '',
     clientSecret: env.YT_CLIENT_SECRET || '',
@@ -61,6 +69,8 @@ const READY = {
   telegram: () => !!(config.telegram.botToken && config.telegram.chatId),
   threads: () => !!(config.threads.userId && config.threads.accessToken),
   instagram: () => !!(config.instagram.userId && config.instagram.accessToken),
+  tiktok: () =>
+    !!(config.tiktok.clientKey && config.tiktok.clientSecret && config.tiktok.refreshToken),
   youtube: () =>
     !!(config.youtube.clientId && config.youtube.clientSecret && config.youtube.refreshToken)
 };

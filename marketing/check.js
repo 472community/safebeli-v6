@@ -8,6 +8,7 @@ const ADAPTERS = {
   telegram: require('./lib/telegram'),
   threads: require('./lib/threads'),
   instagram: require('./lib/instagram'),
+  tiktok: require('./lib/tiktok'),
   youtube: require('./lib/youtube')
 };
 

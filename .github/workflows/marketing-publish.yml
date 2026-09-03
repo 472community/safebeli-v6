@@ -1,0 +1,71 @@
+name: SNS 자동 발행
+
+# 매시 정각에 큐를 확인해서, 발행 시각이 지난 글을 각 SNS 로 내보낸다.
+# (schedule 트리거는 항상 기본 브랜치의 워크플로/큐를 사용한다)
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '실제로 발행하지 않고 미리보기만'
+        type: boolean
+        default: false
+      post_id:
+        description: '특정 글 id 만 즉시 발행 (비우면 예약분 전체)'
+        type: string
+        default: ''
+
+concurrency:
+  group: marketing-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 발행
+        env:
+          MARKETING_SITE_URL: ${{ vars.MARKETING_SITE_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_USERNAME: ${{ vars.TELEGRAM_BOT_USERNAME }}
+          TELEGRAM_CHANNEL_URL: ${{ vars.TELEGRAM_CHANNEL_URL }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          ARGS=""
+          if [ "${{ inputs.dry_run }}" != "true" ]; then ARGS="--live"; fi
+          if [ -n "${{ inputs.post_id }}" ]; then ARGS="$ARGS --id ${{ inputs.post_id }} --now"; fi
+          node marketing/publish.js $ARGS
+
+      - name: 발행 결과를 큐에 커밋
+        if: always()
+        run: |
+          if git diff --quiet -- marketing/content/queue.json; then
+            echo "큐 변경 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add marketing/content/queue.json
+          git commit -m "chore(marketing): 발행 결과 기록 [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

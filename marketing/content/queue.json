@@ -1,0 +1,19 @@
+{
+  "$comment": "SNS 발행 큐. Claude 가 여기에 글을 추가하고, GitHub Actions 가 시각이 되면 발행한다. 발행 후 결과가 이 파일에 다시 기록된다.",
+  "posts": [
+    {
+      "id": "sample-do-not-post",
+      "status": "canceled",
+      "publishAt": "2026-01-01T00:00:00+07:00",
+      "platforms": ["telegram", "threads", "instagram"],
+      "text": "여기가 본문. {{link}} 자리에 유입 추적이 붙은 텔레그램 링크가 자동으로 들어간다.",
+      "variants": {
+        "instagram": "플랫폼별로 다른 본문을 쓰고 싶으면 variants 에 넣는다. {{link}}"
+      },
+      "media": ["https://safebeli.vercel.app/marketing/example.jpg"],
+      "video": null,
+      "title": null,
+      "tags": []
+    }
+  ]
+}

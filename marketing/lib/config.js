@@ -35,7 +35,9 @@ const config = {
     botToken: env.TELEGRAM_BOT_TOKEN || '',
     chatId: env.TELEGRAM_CHAT_ID || '',        // 채널: @myChannel 또는 -100xxxxxxxxxx
     botUsername: (env.TELEGRAM_BOT_USERNAME || '').replace(/^@/, ''),
-    channelUrl: env.TELEGRAM_CHANNEL_URL || ''  // 예: https://t.me/my_channel
+    channelUrl: env.TELEGRAM_CHANNEL_URL || '',  // 예: https://t.me/my_channel
+    // 'channel'(기본) = 채널로 바로 보냄 / 'bot' = 봇을 거쳐 글 단위 유입 추적
+    linkMode: (env.TELEGRAM_LINK_MODE || 'channel').toLowerCase()
   },
 
   threads: {
@@ -84,19 +86,4 @@ function readyPlatforms() {
   return Object.keys(READY).filter(isReady);
 }
 
-/**
- * 유입 추적용 텔레그램 링크.
- * 봇 유저네임이 있으면 ?start=<source> 로 유입 출처가 봇에 그대로 찍힌다.
- * 없으면 채널 URL로 폴백.
- */
-function telegramLink(source) {
-  const t = config.telegram;
-  if (t.botUsername) {
-    const s = String(source || 'direct').replace(/[^A-Za-z0-9_]/g, '_').slice(0, 64);
-    return `https://t.me/${t.botUsername}?start=${s}`;
-  }
-  if (t.channelUrl) return t.channelUrl;
-  return '';
-}
-
-module.exports = { config, isReady, readyPlatforms, telegramLink };
+module.exports = { config, isReady, readyPlatforms };

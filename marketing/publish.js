@@ -9,7 +9,8 @@
  *   node marketing/publish.js --platform telegram --live  # 특정 플랫폼만
  */
 const queue = require('./lib/queue');
-const { isReady, telegramLink } = require('./lib/config');
+const { isReady } = require('./lib/config');
+const { telegramLink } = require('./lib/link');
 const brand = require('./lib/brand');
 const media = require('./lib/media');
 const { C } = require('./lib/util');
@@ -20,14 +21,6 @@ const ADAPTERS = {
   instagram: require('./lib/instagram'),
   tiktok: require('./lib/tiktok'),
   youtube: require('./lib/youtube')
-};
-
-const SOURCE_CODE = {
-  telegram: 'tg',
-  threads: 'th',
-  instagram: 'ig',
-  tiktok: 'tt',
-  youtube: 'yt'
 };
 
 /**
@@ -57,9 +50,10 @@ function parseArgs(argv) {
  */
 function render(post, platform) {
   const raw = (post.variants && post.variants[platform]) || post.text || '';
-  const source = `${SOURCE_CODE[platform] || platform}_${String(post.id).replace(/[^A-Za-z0-9_]/g, '_')}`;
 
-  let out = raw.split('{{link}}').join(telegramLink(source));
+  let out = raw.includes('{{link}}')
+    ? raw.split('{{link}}').join(telegramLink(platform, post.id))
+    : raw;
 
   if (/\{\{ref(:[^}]+)?\}\}/.test(out)) {
     if (!REFERRAL_ALLOWED.has(platform)) {

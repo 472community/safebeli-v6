@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /** 자격증명 점검기: 어떤 플랫폼이 지금 당장 자동발행 가능한지 확인한다. */
-const { isReady, telegramLink } = require('./lib/config');
+const { isReady, config } = require('./lib/config');
+const link = require('./lib/link');
 const { C } = require('./lib/util');
 
 const ADAPTERS = {
@@ -28,6 +29,10 @@ const ADAPTERS = {
       console.log(`${C.red('✕')} ${name.padEnd(10)} 자격증명 오류 — ${e.message}`);
     }
   }
-  console.log(`\n유입 추적 링크 예시: ${telegramLink('ig_test')}`);
-  console.log(C.gray(`발행 가능한 플랫폼 ${ready}개`));
+  console.log(C.bold(`\n텔레그램 유입 링크 (모드: ${config.telegram.linkMode})\n`));
+  for (const row of link.describe()) {
+    const mark = row.tracked ? C.green('추적됨') : C.yellow('추적 안 됨');
+    console.log(`  ${row.platform.padEnd(10)} ${mark}  ${row.link}`);
+  }
+  console.log(C.gray(`\n발행 가능한 플랫폼 ${ready}개`));
 })();

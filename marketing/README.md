@@ -56,30 +56,56 @@
 
 ---
 
-## A. 텔레그램 (5분) — 여기부터 하세요
+## A. 텔레그램 유입 링크 (5분)
 
-1. 텔레그램에서 **@BotFather** → `/newbot` → 이름·유저네임 입력 → **토큰** 복사
-2. 채널을 만들고, 만든 봇을 채널 **관리자**로 추가 (게시 권한 필요)
-3. 채널이 공개면 `TELEGRAM_CHAT_ID` = `@채널유저네임`
-   비공개면 `-100` 으로 시작하는 숫자 ID
+기본은 **채널 직결**입니다. 봇 없이 바로 됩니다.
 
-얻는 값: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_CHANNEL_URL`
+`brand.json` 의 `telegram.channelUrl` 에 채널 주소가 들어 있으면 그걸로 나갑니다.
 
-### 유입 추적 (이게 핵심, 추가 설정 0)
+### 플랫폼별 유입 수를 보고 싶다면 (권장, 5분)
 
-SNS 글의 링크는 `https://t.me/<봇>?start=ig_2026-09-05-후크` 형태로 자동 생성됩니다.
-사용자가 그 링크로 봇을 시작하면 `node marketing/collect-leads.js` 가 걷어와
-`marketing/content/leads.json` 에 **누가 어느 글을 보고 들어왔는지** 기록합니다.
+텔레그램 채널 → **관리 → 초대 링크 → 새 링크 만들기** 를 4번 반복해서
+이름을 각각 `threads` / `instagram` / `tiktok` / `youtube` 로 붙이세요.
+생성된 주소를 `brand.json` 의 `telegram.inviteLinks` 에 넣으면 끝입니다.
 
-```bash
-node marketing/collect-leads.js            # 수집 + 집계 리포트
-node marketing/collect-leads.js --report   # 집계만
+```json
+"inviteLinks": {
+  "threads":   "https://t.me/+xxxxx",
+  "instagram": "https://t.me/+yyyyy",
+  "tiktok":    "https://t.me/+zzzzz",
+  "youtube":   "https://t.me/+wwwww"
+}
 ```
 
-서버도 웹훅도 필요 없습니다. GitHub Actions 가 매시 자동으로 돌립니다.
-`TELEGRAM_WELCOME_MESSAGE` 를 채우면 신규 유입에게 환영 메시지도 자동 발송됩니다.
+이제 채널 관리 화면에서 **링크별 가입자 수**가 보입니다.
+어느 플랫폼이 사람을 데려왔는지 알 수 있고, **마찰은 0** 입니다.
 
-⚠️ 같은 봇에 웹훅이 걸려 있으면 수집이 막힙니다. 해제: `curl "https://api.telegram.org/bot<TOKEN>/deleteWebhook"`
+### 글 단위까지 보고 싶다면 (봇 필요)
+
+어느 *영상*이 데려왔는지까지 알고 싶으면 봇이 필요합니다.
+
+1. 텔레그램에서 **@BotFather** → `/newbot` → 이름·유저네임 입력 (유저네임은 `bot` 으로 끝나야 함)
+2. 받은 토큰과 유저네임을 `.env` 또는 repo secrets 에 넣기
+3. `TELEGRAM_LINK_MODE=bot` 으로 전환
+
+그러면 링크가 `https://t.me/<봇>?start=tt_2026-09-13-...` 형태가 되고,
+`node marketing/collect-leads.js` 가 누가 어느 글을 보고 들어왔는지 기록합니다.
+대신 사용자가 봇 화면을 한 번 거칩니다.
+
+| 방식 | 마찰 | 측정 단위 | 봇 |
+|---|---|---|---|
+| 채널 직결 + 초대링크 | 없음 | 플랫폼 단위 | 불필요 |
+| 봇 경유 | 한 단계 | **글 단위** | 필요 |
+
+### 봇이 반드시 필요해지는 때
+
+- 텔레그램 채널에 **자동으로 글을 올릴 때** (채널 게시는 봇만 가능)
+- 신규 유입에게 **환영 메시지를 자동 발송**할 때
+- 글 단위 유입 추적
+
+지금은 셋 다 필요 없으므로 봇 없이 진행합니다.
+나중에 텔레그램 운영을 시작하실 때 만드시면 됩니다 — 그때는 채널 관리자로 추가하고
+"메시지 게시" 권한을 켜야 합니다.
 
 ---
 

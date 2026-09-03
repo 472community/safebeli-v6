@@ -19,12 +19,13 @@ description: 커뮤니티 텔레그램 유입용 SNS 글을 작성해 발행 큐
 1. **큐 확인** — `marketing/content/queue.json` 에서 최근 글의 주제·콘텐츠 축 중복을 피한다.
 2. **유입 데이터 확인** — `node marketing/collect-leads.js --report` 로 지금까지
    어느 글이 사람을 데려왔는지 본다. 잘 먹힌 축을 변주하고, 죽은 축은 버린다.
-3. **초안 작성** — 아래 규칙대로 플랫폼별 본문을 쓰고 큐에 항목을 추가한다.
+3. **초안 작성** — 아래 규칙대로 플랫폼별 본문을 쓰고 큐에 `status: "draft"` 로 추가한다.
+   **본인 경험담을 지어내지 않는다.** "내가 틀렸던 것" 축은 대표님께 실제 사례를 받아서 쓴다.
 4. **미리보기** — `node marketing/publish.js --id <id> --now` (드라이런). 렌더된 본문을 보여준다.
 5. **승인 받기** — 실제 발행은 외부 공개 행위다. 사용자가 명시적으로 "올려" 라고 하기 전에는
    `--live` 를 절대 실행하지 않는다.
 6. **발행**
-   - 예약: 큐만 커밋·푸시 → 시각이 되면 GitHub Actions 가 자동 발행
+   - 예약: `status` 를 `scheduled` 로 바꾸고 커밋·푸시 → 시각이 되면 GitHub Actions 가 자동 발행
    - 즉시: `node marketing/publish.js --id <id> --now --live`
 
 ## 큐 항목 형식
@@ -44,6 +45,9 @@ description: 커뮤니티 텔레그램 유입용 SNS 글을 작성해 발행 큐
 }
 ```
 
+- `status` — `draft`(승인 전, **자동 발행 안 됨**) → 승인되면 `scheduled` 로 바꾼다.
+  발행 후 `posted`, 일부 실패 시 `partial`, 취소는 `canceled`.
+  **초안은 반드시 `draft` 로 넣는다.**
 - `id` 는 `YYYY-MM-DD-슬러그`. 영문 소문자·숫자·하이픈만. **유입 출처 코드가 이 id 로 만들어지므로
   글의 주제를 알아볼 수 있게 짓는다.**
 - `publishAt` 은 `brand.json` 의 `timezone` 기준 오프셋으로 쓴다.

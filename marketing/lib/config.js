@@ -43,6 +43,7 @@ const config = {
   threads: {
     userId: env.THREADS_USER_ID || '',
     accessToken: env.THREADS_ACCESS_TOKEN || '',
+    appSecret: env.THREADS_APP_SECRET || '', // 장기 토큰 교환에만 쓴다
     apiVersion: env.THREADS_API_VERSION || 'v1.0'
   },
 

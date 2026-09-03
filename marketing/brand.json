@@ -84,7 +84,8 @@
   },
   "telegram": {
     "channelUrl": "https://t.me/can_rescue_U",
-    "$inviteLinks_help": "플랫폼별 초대링크. 텔레그램 채널 → 관리 → 초대 링크 → '새 링크 만들기' 로 4개 만들고 이름을 각각 threads/instagram/tiktok/youtube 로 붙인 뒤, 생성된 주소를 여기 넣으세요. 그러면 채널 관리 화면에서 링크별 가입자 수가 보입니다.",
+    "linkPolicy": "모든 플랫폼이 이 채널 주소 하나를 공유한다(통합). 마찰이 가장 적은 대신 플랫폼 구분은 되지 않는다.",
+    "$inviteLinks_help": "나중에 플랫폼별 유입 수를 나눠 보고 싶어지면, 채널 → 관리 → 초대 링크에서 링크를 따로 만들어 여기에 넣으면 된다. 비어 있으면 위 channelUrl 하나로 통합된다.",
     "inviteLinks": {
       "threads": "",
       "instagram": "",

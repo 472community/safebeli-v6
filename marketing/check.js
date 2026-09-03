@@ -30,9 +30,15 @@ const ADAPTERS = {
     }
   }
   console.log(C.bold(`\n텔레그램 유입 링크 (모드: ${config.telegram.linkMode})\n`));
-  for (const row of link.describe()) {
-    const mark = row.tracked ? C.green('추적됨') : C.yellow('추적 안 됨');
+  const rows = link.describe();
+  for (const row of rows) {
+    const mark = row.tracked ? C.green('플랫폼 구분됨') : C.gray('통합       ');
     console.log(`  ${row.platform.padEnd(10)} ${mark}  ${row.link}`);
+  }
+  if (rows.every((r) => !r.tracked)) {
+    console.log(
+      C.gray('  └ 모든 플랫폼이 같은 링크를 씁니다. 플랫폼별로 나눠 보려면 brand.json 의 telegram.inviteLinks 를 채우세요.')
+    );
   }
   console.log(C.gray(`\n발행 가능한 플랫폼 ${ready}개`));
 })();

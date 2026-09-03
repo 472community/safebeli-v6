@@ -28,8 +28,9 @@
 
 ## 역할 분담
 
-### 대표님이 해야 하는 것 (최초 1회, 40~60분)
-① `brand.json` 채우기 ② 토큰 발급 (A~D). **한 번 하면 끝입니다.**
+### 대표님이 해야 하는 것 (최초 1회)
+토큰 발급뿐입니다 (A~E). 필요한 것만, 하나씩 하셔도 됩니다.
+**스레드(B, 15분)부터 하시면 그날 바로 첫 글이 나갑니다.**
 
 ### 그 뒤로 제가 하는 것 (매번)
 - 콘텐츠 축 선정, 플랫폼별 카피 작성, 해시태그, 발행 시각 배치
@@ -37,22 +38,23 @@
 - 유입 데이터(어느 글에서 몇 명 들어왔는지) 집계 → 다음 주 방향 제안
 
 ### 대표님이 매번 해야 하는 것
-- **초안 승인 한 번** ("올려")
+- **초안 승인 한 번** — `node marketing/go.js` 실행하고 `y`
 - 이미지/영상 소재 확보 (Canva 커넥터가 연결돼 있어 디자인 생성은 제가 도울 수 있습니다)
 
 ---
 
-## 0. brand.json 먼저 (10분, 제일 중요)
+## 0. brand.json — 이미 채워져 있습니다
 
-`marketing/brand.json` 을 채워주세요. 특히:
+커뮤니티 정체성, 타깃, 톤, 콘텐츠 축, 금지 표현, 채널 구분(텔레그램/SNS/포스타입),
+텔레그램 채널 주소까지 `marketing/brand.json` 에 정리돼 있습니다.
+Claude 는 글을 쓸 때마다 이 파일을 근거로 삼습니다.
 
-- **`telegramValue`** — 텔레그램에 들어와야만 얻는 것.
-  **여기가 비면 유입은 안 생깁니다.** "팔로우 말고 텔레그램에 들어올 이유" 가 없으면
-  아무리 좋은 글을 써도 링크를 안 누릅니다.
-- `contentAxes` — 소재 고갈을 막는 축 5~7개
-- `banned` — 절대 쓰면 안 되는 표현
+아직 비어 있는 것:
 
-말로 알려주셔도 됩니다. 제가 대신 채워넣겠습니다.
+- `revenue.referral.exchanges` — 제휴 거래소명과 레퍼럴 링크
+- `revenue.membership.url` — 포스타입 주소
+
+둘 다 거래소·구독 단계에 가서 필요합니다. 지금 단계(텔레그램 유입)에서는 없어도 됩니다.
 
 ---
 
@@ -109,21 +111,62 @@
 
 ---
 
-## B. 스레드 (15분)
+## B. 스레드 (15분) — 여기부터 하세요
 
-1. https://developers.facebook.com → 앱 만들기 → 용도 **"Threads API"**
-2. 앱에 Threads 계정 연결, 권한 `threads_basic`, `threads_content_publish` 추가
-3. 토큰 생성 후 **장기 토큰(60일)** 으로 교환:
-   ```
-   GET https://graph.threads.net/access_token
-       ?grant_type=th_exchange_token
-       &client_secret=<앱시크릿>
-       &access_token=<단기토큰>
-   ```
-4. 사용자 ID: `GET https://graph.threads.net/v1.0/me?fields=id,username&access_token=<토큰>`
+가장 빨리 되는 플랫폼입니다. 영상 없이 글만으로도 바로 돌릴 수 있습니다.
 
-얻는 값: `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN`
-⚠️ 60일마다 갱신 필요 — 만료 2주 전 알림을 캘린더에 넣어드릴 수 있습니다.
+### 1) Meta 앱 만들기
+
+1. https://developers.facebook.com/apps → **앱 만들기**
+2. 사용 사례에서 **Threads API** 를 선택 (목록에 없으면 "기타" → "비즈니스" 후 제품에서 Threads API 추가)
+3. 앱이 만들어지면 **Threads API** 제품으로 들어갑니다
+
+### 2) 권한과 테스터 설정
+
+- 권한(스코프)에 **`threads_basic`**, **`threads_content_publish`** 두 개를 추가합니다
+- **앱 역할 → 역할** 에서 본인 스레드 계정을 **Threads 테스터**로 추가합니다
+- 스레드 앱(모바일) → 설정 → 웹사이트 권한 → **테스터 초대 수락**
+
+> 이 수락을 안 하면 토큰이 나와도 게시가 계속 실패합니다. 제일 흔한 막힘 지점입니다.
+
+### 3) 토큰 받기
+
+Threads API 대시보드에서 **사용자 토큰 생성(Generate access token)** 을 누르면
+**1시간짜리 단기 토큰**이 나옵니다. 이걸 60일짜리로 바꿔야 합니다.
+
+`marketing/.env` 에 앱 시크릿부터 넣고:
+
+```
+THREADS_APP_SECRET=<Meta 앱 > 설정 > 기본 > 앱 시크릿 코드>
+```
+
+그다음 한 줄이면 끝납니다:
+
+```bash
+node marketing/threads-token.js --exchange <단기토큰>
+```
+
+계정 확인, 장기 토큰 교환, 사용자 ID 조회를 한 번에 처리하고
+`.env` 에 붙여넣을 두 줄을 그대로 출력해줍니다.
+
+### 4) 확인
+
+```bash
+node marketing/check.js
+```
+
+`● threads  연결됨 — @계정명` 이 나오면 끝입니다.
+
+### 60일마다 갱신
+
+스레드 장기 토큰은 60일 만료입니다. 만료 전에:
+
+```bash
+node marketing/threads-token.js --refresh
+```
+
+새 토큰을 출력해줍니다. `.env` 와 GitHub repo secrets 양쪽을 바꿔주세요.
+(만료되면 다시 단기 토큰부터 받아야 하니 미리 캘린더에 넣어두는 편이 낫습니다.)
 
 ---
 
@@ -196,7 +239,7 @@
 
 Secrets (비밀):
 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN`,
-`IG_USER_ID`, `IG_ACCESS_TOKEN`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`,
+`THREADS_APP_SECRET`, `IG_USER_ID`, `IG_ACCESS_TOKEN`, `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`,
 `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN`
 
 Variables (공개돼도 되는 값):

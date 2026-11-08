@@ -1,0 +1,288 @@
+{
+ "start": "2026-11-08T15:11:44.088Z",
+ "round": 3,
+ "idle": 0,
+ "errors": 0,
+ "status": "open",
+ "history": [
+  {
+   "at": "2026-11-08T15:28:41.253Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 4,
+   "round": 1,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-08T15:30:45.275Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 3,
+   "round": 2,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-08T15:32:26.812Z",
+   "mode": "manual",
+   "status": "open",
+   "fails": 2,
+   "round": 3,
+   "reused": false,
+   "stopHookActive": false
+  }
+ ],
+ "max": 3,
+ "marker": {
+  "page": "index.html",
+  "dir": "/home/user/safebeli-v6/giant-flower",
+  "kind": "service",
+  "start": "2026-11-08T15:11:44.088Z",
+  "by": "start.mjs",
+  "url": null
+ },
+ "manual": true,
+ "roundKey": "0680adfc61219a99:83a5856b",
+ "roundFree": false,
+ "idleFree": false,
+ "blockKey": null,
+ "fp": "0680adfc61219a99",
+ "page": "index.html",
+ "found": {
+  "fails": [
+   {
+    "check": "section-height",
+    "where": "section#faq \"자주 묻는 질문 얼마나 일찍 예약해야 하나요?졸업식이 몰리는 1~2월은 \"",
+    "msg": "the section's content does not fit it: its lowest content ends 831px below its top, past 828px (the section less 72px of bottom padding) (SR-2)",
+    "fix": "fit the content above the section's bottom padding (--padb), or make it two screens (.g2) in two groups",
+    "widths": [
+     1440
+    ],
+    "from": "consistency",
+    "ids": [
+     "section-height"
+    ],
+    "wheres": [
+     "section#faq \"자주 묻는 질문 얼마나 일찍 예약해야 하나요?졸업식이 몰리는 1~2월은 \""
+    ]
+   },
+   {
+    "check": "hole",
+    "where": "section#faq \"자주 묻는 질문\"",
+    "msg": "an empty hole 168x304px inside the section (36% of the screen's height), with content above and below it",
+    "fix": "close the empty space: move the content together, or give the space the visual it lacks",
+    "widths": [
+     390
+    ],
+    "from": "consistency",
+    "ids": [
+     "hole"
+    ],
+    "wheres": [
+     "section#faq \"자주 묻는 질문\""
+    ]
+   },
+   {
+    "check": "hero-lines",
+    "where": "section.hero h1",
+    "msg": "the check fills the h1 to 45 characters (this hero's maxChars in heroes.json), not the page's own: it takes 4 lines at 1440, 3 at most",
+    "fix": "the check fills the h1 to this hero's maxChars, not your own: take the next type pairing the deal printed (start.mjs); when the h1 is final and fits, waive it (target: section.hero h1)",
+    "widths": [
+     1440
+    ],
+    "from": "layout",
+    "ids": [
+     "hero-lines"
+    ],
+    "wheres": [
+     "section.hero h1"
+    ]
+   }
+  ],
+  "warns": [
+   {
+    "check": "scroll-reveal",
+    "where": "section#reviews > div.wrap > div.grid.grid--top > figure.develop.span-6",
+    "msg": "starts an animation (1.6 s) the moment it is scrolled into view (an IntersectionObserver) on img (inside a dealt moment's section, [data-moment]: an enter moment is expected on every kind; its still is judged under reduced motion)",
+    "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "copy-headline",
+    "where": "h1#hero-h \"졸업식과 행사를 위한 자이언트 플라워 대여\"",
+    "msg": "\"졸업식과 행사를 위한 자이언트 플라워 대여\": no category known to check it against (pass --category, or write the <title> as \"Name: what it is for whom\")",
+    "fix": "put the category noun in the h1 (and who it is for, or where), in 2 to 8 words",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#why / section#reviews",
+    "msg": "265px between these sections, +29% against the median 205px of gaps at a change of ground",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#faq / footer#contact",
+    "msg": "uneven space at the edge of a band: 69px outside its edge, 122px inside it (the space on either side of a change of ground reads as one gap only when the two match)",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "skip-link",
+    "where": "header.nav > div.wrap.nav__bar > a.skip-link:nth-of-type(1) \"본문으로 건너뛰기\"",
+    "msg": "the first Tab stop is \"본문으로 건너뛰기\", not a skip link: a keyboard user tabs through the whole nav on every visit",
+    "fix": "add the starter's skip link as the header's first child: <a class=\"skip-link\" href=\"#top\">Skip to content</a>",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "action-repeat",
+    "where": "header.nav > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"대여 문의하기\"",
+    "msg": "\"대여 문의하기\" shows 2 times on the first screen at 1440px (nav, hero): the nav's button and the hero's; nothing else on the screen may repeat it",
+    "fix": "show the action once a screen besides the nav's button: the hero's, the close's or the phone bar's, never all at once",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "assumed",
+    "where": "div.hero-text.grid > div.hero__text.span-5:nth-of-type(1) > p.hero__lead > span \"1.2~2m\"",
+    "msg": "1 fact marked as assumed, for the report: \"1.2~2m\"",
+    "fix": "list each assumed fact in the report for the client to confirm, or take it from the brief",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "cta",
+    "where": "section#why \"하루큰꽃을 고르는 세 가지 이유\"",
+    "msg": "a section over 1.5 screens long with no link or button in it",
+    "fix": "add the action: a button in the hero, one on every priced item, one in the closing section",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "main#top > section.hero.hero--split / section#why",
+    "msg": "284px between these sections, -41% against the median 478px",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#reviews / section#faq",
+    "msg": "uneven space at the edge of a band: 97px outside its edge, 372px inside it (the space on either side of a change of ground reads as one gap only when the two match)",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "photo-weight",
+    "where": "div.wrap > div.hero-text.grid > div.hero__media.span-6 > img \"wall.jpg\"",
+    "msg": "3 photographs are 3x or more wider than drawn on the phone, with no srcset: wall.jpg is 1344px (302 KB) for a 342px frame; on a phone it arrives late and its frame shows only its ground until then",
+    "fix": "give each photograph srcset and sizes (a 800px and a 1600px file), or a smaller file: the frame never shows empty",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "empty-area",
+    "where": "section#reviews \"행사를 치른 분들의 후기\"",
+    "msg": "35% of the section is empty: 272px of empty rows between its content, 256px under its last (figure.develop.span-6), in its 1491px of rows (WARN over 35%, FAIL over 50%)",
+    "fix": "fill the section: a picture or a second column beside the words, or more of its own content; the section stays one or two screens tall (T-height)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   }
+  ],
+  "crashed": [],
+  "seconds": {
+   "consistency": 89,
+   "layout": 4
+  }
+ },
+ "open": [
+  {
+   "check": "section-height",
+   "where": "section#faq \"자주 묻는 질문 얼마나 일찍 예약해야 하나요?졸업식이 몰리는 1~2월은 \"",
+   "msg": "the section's content does not fit it: its lowest content ends 831px below its top, past 828px (the section less 72px of bottom padding) (SR-2)",
+   "fix": "fit the content above the section's bottom padding (--padb), or make it two screens (.g2) in two groups",
+   "widths": [
+    1440
+   ],
+   "from": "consistency",
+   "ids": [
+    "section-height"
+   ],
+   "wheres": [
+    "section#faq \"자주 묻는 질문 얼마나 일찍 예약해야 하나요?졸업식이 몰리는 1~2월은 \""
+   ]
+  },
+  {
+   "check": "hole",
+   "where": "section#faq \"자주 묻는 질문\"",
+   "msg": "an empty hole 168x304px inside the section (36% of the screen's height), with content above and below it",
+   "fix": "close the empty space: move the content together, or give the space the visual it lacks",
+   "widths": [
+    390
+   ],
+   "from": "consistency",
+   "ids": [
+    "hole"
+   ],
+   "wheres": [
+    "section#faq \"자주 묻는 질문\""
+   ]
+  }
+ ],
+ "waived": [
+  {
+   "check": "hero-lines",
+   "where": "section.hero h1",
+   "msg": "the check fills the h1 to 45 characters (this hero's maxChars in heroes.json), not the page's own: it takes 4 lines at 1440, 3 at most",
+   "fix": "the check fills the h1 to this hero's maxChars, not your own: take the next type pairing the deal printed (start.mjs); when the h1 is final and fits, waive it (target: section.hero h1)",
+   "widths": [
+    1440
+   ],
+   "from": "layout",
+   "ids": [
+    "hero-lines"
+   ],
+   "wheres": [
+    "section.hero h1"
+   ],
+   "reason": "the stress test fills 45 Korean handwriting characters; every real h1 on the four pages takes two lines at 1440 and 390"
+  }
+ ],
+ "warnCount": 12,
+ "at": "2026-11-08T15:32:26.813Z",
+ "openTold": true
+}

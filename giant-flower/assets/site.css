@@ -1,0 +1,89 @@
+/* 하루큰꽃: page CSS shared by the four pages.
+   Brand: ivory ground (client), handwriting display face (client), body in Gowun Dodum.
+   Nanum Pen Script draws small for its size, so the display sizes run about 1.2x the kit's. */
+:root {
+  --p-bg: #fbf7ee; --p-surface: #f3ecdf; --p-ink: #2b2622; --p-muted: #6d6862;
+  --p-accent: #9a3c4c; --p-accent-ink: #fbf7ee; --p-action: #9a3c4c; --p-action-ink: #fbf7ee;
+  --p-inv-bg: #2b2622; --p-inv-surface: #37322e; --p-inv-ink: #fbf7ee; --p-inv-muted: #b3ada5;
+  --p-inv-accent: #fbf7ee; --p-inv-accent-ink: #2b2622; --p-inv-action: #fbf7ee; --p-inv-action-ink: #2b2622;
+  --font-display: "Nanum Pen Script", "Gowun Dodum", cursive;
+  --font-text: "Gowun Dodum", system-ui, sans-serif;
+  --display-weight: 400;
+  --display-tracking: 0;
+  --display-tracking-xl: 0;
+  --ly-scale: 1.2;
+  --t-h2: clamp(36px, 2.06vw + 28px, 58px);
+  --t-h3: 30px;
+}
+body { word-break: keep-all; }
+h1, h2, h3, .t-h1, .t-h2, .t-h3 { word-break: keep-all; }
+.hero h1 { line-height: 1.08; }
+.nav__logo { font-size: 30px; font-weight: 400; }
+.quote blockquote, .footer__lede { line-height: 1.35; }
+
+/* review cards: one quote per row, each closed by a hairline */
+.reviews { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-6); }
+.reviews li { padding-bottom: var(--s-6); border-bottom: 1px solid color-mix(in oklab, var(--p-ink) 14%, transparent); }
+.reviews blockquote { margin: 0 0 var(--s-3); font: 400 30px/1.3 var(--font-display); color: var(--ink, var(--p-ink)); }
+.reviews .t-label { color: var(--p-muted); }
+.note { color: var(--p-muted); font-size: 14px; }
+
+/* photo frames inside splits and cards */
+.media { border-radius: var(--r-lg); overflow: hidden; }
+.media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+#why .panel { --p-h: 420px; }
+@media (max-width: 1023px) { #why .panel { --p-h: 300px; } }
+@media (max-width: 639px) { #why .panel { --p-h: 220px; } }
+
+/* the photograph beside the reviews ends on the section's last content line, never past it */
+/* every split photograph ends on the section's last content line, never past it */
+.grid > .media { height: 540px; }
+@media (max-width: 1023px) { .grid > .media { height: 360px; } }
+@media (max-width: 639px) { .grid > .media { height: 280px; } }
+/* on a phone the stage photograph is cut tall: keep the flowers on the left in the frame */
+@media (max-width: 1023px) { .close__media > img { --pos: 14% 50%; } }
+
+/* services: four numbered steps on one row, then the stage photograph across the wrap */
+.steps-list { list-style: none; margin: 0; padding: 0; }
+.steps-list li { display: grid; gap: var(--s-2); align-content: start; }
+.steps-list h3 { font-family: var(--font-text); font-weight: 500; font-size: var(--t-card); line-height: 1.3; }
+.step-no { font: 400 56px/1 var(--font-display); color: var(--p-accent); }
+.steps-photo { margin-top: var(--s-7); height: 300px; }
+.steps-photo img { object-position: 50% 45%; }
+@media (max-width: 1023px) { .steps-list li { grid-column: span 6; } .steps-photo { height: 240px; } }
+@media (max-width: 639px) { .steps-list li { grid-column: 1 / -1; } .steps-photo { margin-top: var(--s-6); height: 200px; } }
+.form textarea { width: 100%; }
+
+/* the message field takes the form's full width */
+.form .field:has(textarea) { grid-column: 1 / -1; }
+
+/* screen fit: the three reason cards and the reviews take two screens where they stack */
+@media (max-height: 820px) and (min-width: 1024px) { #why .panel { --p-h: 300px; } }
+@media (min-width: 640px) and (max-width: 1023px) { #why { --h: 2; } }
+@media (max-width: 639px) { #why { --hm: 2; } #reviews { --hm: 2; } }
+@media (max-width: 639px) { :root { --ly-scale: 1; } }
+@media (max-width: 639px) { #types { --hm: 2; } }
+
+/* picture-develops on the home reviews: the photograph as tall as the reviews beside it */
+.develop { margin: 0; border-radius: var(--r-lg); overflow: hidden; height: 540px; }
+.develop > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 1023px) { .develop { height: 360px; } }
+@media (max-width: 639px) { .develop { height: 280px; } }
+/* the FAQ photograph beside the answers; where they stack, the section takes two screens */
+.grid > .media.faq-photo { height: 600px; }
+@media (max-width: 1023px) { .grid > .media.faq-photo { height: 360px; } #faq { --h: 2; } }
+@media (max-width: 639px) { .grid > .media.faq-photo { height: 280px; } #faq { --hm: 2; } }
+/* the phone hero keeps its photograph short so the gap to the next section matches the others */
+@media (max-width: 639px) { .hero--split .hero__media { flex: 0 0 260px; min-height: 240px; } }
+/* FAQ: answers a little tighter so the five fit one desktop screen; a taller photograph fills the phone's second screen */
+#faq .faq > .faq__item { padding-block: 20px; }
+#faq .faq > .faq__item:first-child { padding-top: 0; }
+@media (max-width: 639px) { .grid > .media.faq-photo { height: 440px; } }
+/* phone: the reviews fit one screen (smaller quotes, a shorter photograph) instead of two half-empty ones */
+@media (max-width: 639px) {
+  #reviews { --hm: 1; }
+  .reviews { gap: var(--s-4); } .reviews li { padding-bottom: var(--s-4); }
+  .reviews blockquote { font-size: 23px; }
+  #reviews .develop { height: 180px; }
+}
+@media (max-width: 639px) { #types .grid > .media { height: 460px; } }

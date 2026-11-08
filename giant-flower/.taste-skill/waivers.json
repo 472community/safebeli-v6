@@ -1,0 +1,1 @@
+[{ "check": "hero-lines", "target": "section.hero h1", "reason": "the stress test fills 45 Korean handwriting characters; every real h1 on the four pages takes two lines at 1440 and 390" }]

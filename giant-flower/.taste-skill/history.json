@@ -1,0 +1,21 @@
+{
+ "moments": [
+  {
+   "id": "photo-chapters",
+   "at": "2026-11-08T15:11:37.960Z",
+   "seed": "d724a61f"
+  },
+  {
+   "id": "word-highlight",
+   "at": "2026-11-08T15:11:44.159Z",
+   "seed": "a6bb853d"
+  }
+ ],
+ "palettes": [],
+ "types": [],
+ "dealt": [
+  "hanken",
+  "source-serif",
+  "newsreader"
+ ]
+}

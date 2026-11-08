@@ -1,2 +1,4 @@
 .taste-skill/chrome-*
 .taste-skill/*.png
+.taste-skill/gate/
+.taste-skill/found.json
